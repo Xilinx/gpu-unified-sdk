@@ -1,61 +1,12 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-project(sdk)
-
-set(CMAKE_CXX_STANDARD 20)
+project(LibSdk)
 
 
-get_filename_component(SdkDir "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
-get_filename_component(RootDir "${SdkDir}/.." ABSOLUTE)
-
-
-# options
-set(SDK_HOST NO CACHE BOOL "")
-set(SDK_DEV NO CACHE BOOL "")
-set(SDK_WSI "" CACHE STRING "")
-set(SDK_WSI_GLFW_NO_API YES CACHE BOOL "")
-
-
-# vars
-if (SDK_HOST)
-	set(Sdk_UseDma NO)
-else()
-	set(Sdk_UseDma YES)
-endif()
-
-
-find_package(PNG REQUIRED)
-
-# resolve libdrm library
-find_path(DrmLocation drm.h PATH_SUFFIXES libdrm)
-if (NOT DrmLocation)
-	message(FATAL_ERROR "libdrm headers not found")
-endif()
-add_library(libdrm INTERFACE)
-target_include_directories(libdrm INTERFACE "${DrmLocation}")
-target_link_libraries(libdrm INTERFACE drm)
-
-# resolve libyuv library
-
-# resolve gstreamer-1.0
-find_package(GTK2 REQUIRED gtk)
-find_path(GstLocation gst/gst.h PATH_SUFFIXES gstreamer-1.0)
-if (NOT GstLocation)
-	message(FATAL_ERROR "gstreamer-1.0 headers not found")
-endif()
-add_library(gstreamer INTERFACE)
-target_include_directories(gstreamer INTERFACE "${GstLocation}")
-target_link_libraries(gstreamer INTERFACE
-	GTK2::glib
-	GTK2::gobject
-	gstreamer-1.0
-	gstallocators-1.0
-	gstvideo-1.0
-)
-
-
-set(LogRootDir "${CMAKE_CURRENT_LIST_DIR}")
+set(ECM_DIR       "${ModulesDir}/ecm" CACHE STRING "" FORCE)
+set(GStreamer_DIR "${ModulesDir}/gstreamer" CACHE STRING "" FORCE)
+set(DRM_DIR       "${ModulesDir}/drm" CACHE STRING "" FORCE)
 
 
 # common interface library
@@ -86,13 +37,20 @@ if (SDK_HOST)
 endif()
 
 
-if (Demo_UseDma)
+if (Sdk_UseDma)
 	target_compile_definitions(sdk_compile_flags INTERFACE
 		SDK_USE_DMA
 	)
 endif()
 
 
-add_subdirectory("Launcher")
-add_subdirectory("Server")
-add_subdirectory("Client")
+# common interface properties
+add_library(SdkIf INTERFACE)
+
+target_include_directories(SdkIf INTERFACE
+	"${ThisDir}"
+)
+
+
+add_subdirectory(Common)
+add_subdirectory(OpenCL)

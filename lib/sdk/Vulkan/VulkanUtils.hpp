@@ -17,7 +17,8 @@
 #define CHECKVK(x, ...) \
 	if (const VkResult res = x; res != VK_SUCCESS) [[unlikely]] { \
 		throw (ExceptionMaker(Log::context(Log::Level::Error, __FILE__, __LINE__, __FUNCTION__)), \
-				"Vulkan failed:", Log::quoted(#x), Log::format("error: %0x08x", res), ##__VA_ARGS__).make(); \
+				"Vulkan error:", Log::quoted(#x), Log::format("code: %0x08x", res), \
+				##__VA_ARGS__).make(); \
 	}
 
 

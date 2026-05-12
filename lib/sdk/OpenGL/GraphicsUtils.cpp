@@ -8,10 +8,10 @@
 #include <GLES3/gl3.h>
 #endif
 
-#include "Folders.hpp"
-#include "Log.hpp"
-#include "LogTypes.hpp"
-#include "PngUtils.hpp"
+#include <Common/Folders.hpp>
+#include <Common/Log.hpp>
+#include <Common/LogTypes.hpp>
+#include <Common/PngUtils.hpp>
 
 
 

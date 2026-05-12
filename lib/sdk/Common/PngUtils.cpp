@@ -9,7 +9,8 @@
 
 
 
-void loadPng(const std::filesystem::path & path, const LoadPngCallback & cb)
+void loadPng(const std::filesystem::path & path, const PngLoadParams params,
+		const LoadPngCallback & cb)
 {
 	const File file = openFile(path, "rb");
 
@@ -64,6 +65,8 @@ void loadPng(const std::filesystem::path & path, const LoadPngCallback & cb)
 		png_set_tRNS_to_alpha(png.get());
 	}
 
+	// png_set_background(png.get(),
+
 	// will alpha with 0xff
 	if (colorType == PNG_COLOR_TYPE_RGB ||
 			colorType == PNG_COLOR_TYPE_GRAY ||
@@ -78,7 +81,7 @@ void loadPng(const std::filesystem::path & path, const LoadPngCallback & cb)
 
 	png_read_update_info(png.get(), info);
 
-	const PngLoadMemory m = cb(size);
+	const PngLoadMemory m = cb(PixelFormat::RGBA8888, size);
 
 	std::vector<png_bytep> rows = [&] () -> std::vector<png_bytep> {
 		std::vector<png_bytep> rows(size.height);
@@ -92,8 +95,27 @@ void loadPng(const std::filesystem::path & path, const LoadPngCallback & cb)
 }
 
 
+Image loadPng(const std::filesystem::path & path, const PngLoadParams params)
+{
+	Image image;
+
+	::loadPng(path, params, [&image] (const PixelFormat format, const Size & size) {
+		image.format = format;
+		image.size = size;
+		image.pitch = size.width * 4;
+		image.data.reset(new uint8_t[image.pitch * size.height]);
+		return PngLoadMemory {
+			.data  = image.data.get(),
+			.pitch = image.pitch,
+		};
+	});
+
+	return std::move(image);
+}
+
+
 void dumpPng(const std::filesystem::path & path, const Size & size, const int pitch,
-		const uint8_t * const pixels, const PngColorType colorType, const PngFlip flip)
+		const uint8_t * const pixels, const PngDumpParams params)
 {
 	const File file = openFile(path, "wb");
 
@@ -127,8 +149,8 @@ void dumpPng(const std::filesystem::path & path, const Size & size, const int pi
 	e = setjmp(png_jmpbuf(png.get()));
 	CHECK(e == 0)
 
-	const int ct = [colorType] () -> int {
-		switch (colorType) {
+	const int ct = [&params] () -> int {
+		switch (params.colorType) {
 		case PngColorType::Rgb:  return PNG_COLOR_TYPE_RGB;
 		case PngColorType::Rgba: return PNG_COLOR_TYPE_RGB_ALPHA;
 		case PngColorType::Gray: return PNG_COLOR_TYPE_GRAY;
@@ -148,7 +170,7 @@ void dumpPng(const std::filesystem::path & path, const Size & size, const int pi
 	std::vector<png_bytep> rows = [&] () -> std::vector<png_bytep> {
 		std::vector<png_bytep> rows(size.height);
 		for (int i = 0; i < size.height; ++i) {
-			const int y = flip == PngFlip::Yes ? size.height - 1 - i : i;
+			const int y = params.flip == PngFlip::Yes ? size.height - 1 - i : i;
 			rows[y] = const_cast<uint8_t*>(pixels) + i * pitch;
 		}
 		return rows;
@@ -159,4 +181,11 @@ void dumpPng(const std::filesystem::path & path, const Size & size, const int pi
 	CHECK(e == 0)
 
 	png_write_end(png.get(), nullptr);
+}
+
+
+void dumpPng(const std::filesystem::path & path, const Image & image,
+		const PngDumpParams params)
+{
+	dumpPng(path, image.size, image.pitch, image.data.get(), params);
 }

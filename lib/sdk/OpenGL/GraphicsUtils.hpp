@@ -5,11 +5,12 @@
 
 #include <EGL/egl.h>
 
+#include <Common/Geometry.hpp>
+
 #ifdef SDK_USE_DMA
 #include "DMATexture.hpp"
 #include "DRMUtils.hpp"
 #endif
-#include "Geometry.hpp"
 #include "GLUtils.hpp"
 
 
