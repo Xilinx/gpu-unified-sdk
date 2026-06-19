@@ -1,0 +1,10 @@
+
+add_subdirectory(basic-compute)
+add_subdirectory(triangle)
+add_subdirectory(texture)
+add_subdirectory(spinning-cube)
+add_subdirectory(multipass)
+add_subdirectory(multisampling)
+add_subdirectory(mipmapping)
+add_subdirectory(astc)
+add_subdirectory(multithreading)

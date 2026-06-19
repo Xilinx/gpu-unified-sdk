@@ -170,20 +170,24 @@ void printSupported2DImageFormats(cl_context context)
 		return false;
 	}*/
 
-	cl_device_id device;
-	size_t deviceBufferSize = 0;
+	/* Query the first device of the context (the context may have several). */
+	cl_device_id device = nullptr;
 	CHECKCL(clGetContextInfo(context, CL_CONTEXT_DEVICES,
-			sizeof(cl_device_id), &device, &deviceBufferSize))
+			sizeof(cl_device_id), &device, nullptr))
 
 	// Get number of supported 2D image formats
 	cl_uint numberOfImageFormats = 0;
 	CHECKCL(clGetSupportedImageFormats(context, CL_MEM_READ_WRITE, CL_MEM_OBJECT_IMAGE2D,
 			0, nullptr, &numberOfImageFormats))
 
-	cl_bool image3DSupported = CL_FALSE;
+	/*
+	 * CL_DEVICE_IMAGE3D_MAX_WIDTH returns a size_t, so it must be read into a size_t-sized buffer.
+	 * A value of 0 indicates that the device does not support 3D images.
+	 */
+	size_t image3DMaxWidth = 0;
 	CHECKCL(clGetDeviceInfo(device, CL_DEVICE_IMAGE3D_MAX_WIDTH,
-			sizeof(cl_bool), &image3DSupported, nullptr))
-	if (!image3DSupported) {
+			sizeof(size_t), &image3DMaxWidth, nullptr))
+	if (image3DMaxWidth == 0) {
 		ERROR("Device does not support 3D images.")
 	}
 

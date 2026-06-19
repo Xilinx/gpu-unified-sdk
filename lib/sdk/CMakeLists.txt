@@ -54,3 +54,4 @@ target_include_directories(SdkIf INTERFACE
 
 add_subdirectory(Common)
 add_subdirectory(OpenCL)
+add_subdirectory(Vulkan)

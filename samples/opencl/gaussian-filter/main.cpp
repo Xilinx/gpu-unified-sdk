@@ -1,6 +1,5 @@
 
 #include <Common/Color.hpp>
-#include <Common/Folders.hpp>
 #include <Common/Geometry.hpp>
 #include <Common/PngUtils.hpp>
 #include <OpenCL/CLUtils.hpp>
@@ -14,7 +13,7 @@ int main(int argc, char ** argv)
 	const ocl::Program program = context.createProgram(device, "assets/gaussian_filter.cl");
 	const ocl::Kernel kernel = program.createKernel("gaussian");
 
-	const Image image = ::loadPng(Folders::get().imagesDir / "assets/input.png",
+	const Image image = ::loadPng("assets/input.png",
 			PngLoadParams{.colorType = PngColorType::Rgb});
 
 	const int bufferSize = image.size.width * image.size.height * sizeof(cl_uchar);
@@ -55,7 +54,7 @@ int main(int argc, char ** argv)
 		Image outputImage = Image::create(PixelFormat::RGB888, image.size);
 		luminanceToRGB(output.memory.data(), outputImage.data.get(),
 				image.size.width, image.size.height);
-		dumpPng("output.png", outputImage, {});
+		dumpPng("output.png", outputImage, PngDumpParams{.colorType = PngColorType::Rgb});
 	}
 
 	return 0;

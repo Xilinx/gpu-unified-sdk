@@ -11,7 +11,7 @@ int main(void)
 	const cl_device_id device = context.findDevice();
 	const ocl::CommandQueue commandQueue = context.createCommandQueue(device);
 	const ocl::Program program = context.createProgram(device, "assets/image_scaling.cl");
-	const ocl::Kernel kernel = program.createKernel("assets/image_scaling");
+	const ocl::Kernel kernel = program.createKernel("image_scaling");
 
 	ocl::printSupported2DImageFormats(context);
 
