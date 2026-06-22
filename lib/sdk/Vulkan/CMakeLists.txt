@@ -1,17 +1,24 @@
 
 find_package(Vulkan REQUIRED)
 
-# glm is header-only. Prefer the imported target if a config is shipped in the
-# sysroot, otherwise fall back to the headers vendored in 3rdparty (exactly like
-# the original GPU_SDK_Vulkan, which shipped glm under framework/glm).
-find_package(glm QUIET)
+# glm is header-only and provided by the Yocto SDK sysroot (it ships
+# usr/lib/cmake/glm/glmConfig.cmake), so resolve it via find_package.
+#
+# Different glm releases export different things: newer ones provide the
+# namespaced imported target glm::glm, older ones a plain "glm" target, and some
+# only set GLM_INCLUDE_DIRS. Normalise all of these onto glm::glm so the rest of
+# this file (and consumers) can link a single, stable target name.
+find_package(glm REQUIRED)
 if (NOT TARGET glm::glm)
-	get_filename_component(_glm_vendor
-		"${CMAKE_CURRENT_LIST_DIR}/../../../3rdparty/glm" ABSOLUTE)
-	if (NOT EXISTS "${_glm_vendor}/glm/glm.hpp")
-		message(FATAL_ERROR
-			"glm not found via find_package and no vendored copy at:\n"
-			"  ${_glm_vendor}/glm/glm.hpp")
+	if (TARGET glm)
+		add_library(glm::glm ALIAS glm)
+	else()
+		add_library(glm::glm INTERFACE IMPORTED)
+		if (GLM_INCLUDE_DIRS)
+			target_include_directories(glm::glm INTERFACE ${GLM_INCLUDE_DIRS})
+		elseif (DEFINED glm_INCLUDE_DIR)
+			target_include_directories(glm::glm INTERFACE ${glm_INCLUDE_DIR})
+		endif()
 	endif()
 endif()
 
@@ -102,11 +109,7 @@ target_include_directories(SdkVulkan
 )
 
 # Expose glm to this library and to consumers (the sample includes glm too).
-if (TARGET glm::glm)
-	target_link_libraries(SdkVulkan PUBLIC glm::glm)
-elseif (_glm_vendor)
-	target_include_directories(SdkVulkan PUBLIC "${_glm_vendor}")
-endif()
+target_link_libraries(SdkVulkan PUBLIC glm::glm)
 
 # wayland-client include dirs from the Yocto pkg-config wrapper can come back
 # with the sysroot prefixed twice (see xdg-shell handling above). Add them only

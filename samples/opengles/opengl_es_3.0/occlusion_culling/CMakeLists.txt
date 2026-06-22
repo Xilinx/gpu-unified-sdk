@@ -1,0 +1,49 @@
+
+# occlusion_culling - Hi-Z GPU occlusion culling (OpenGL ES 3.1)
+# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_3.0/occlusion_culling.
+
+file(GLOB OCCLUSION_CULLING_SOURCES
+	"*.cpp"
+	"common/*.cpp"
+)
+
+add_executable(occlusion_culling ${OCCLUSION_CULLING_SOURCES})
+
+target_link_libraries(occlusion_culling PRIVATE
+	SdkGlesFramework
+)
+
+target_include_directories(occlusion_culling PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# Stage the binary and its assets in a dedicated output directory so the asset
+# copies never target the source tree.
+set(_outdir "${CMAKE_CURRENT_BINARY_DIR}/run")
+set_target_properties(occlusion_culling PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY "${_outdir}"
+	INSTALL_RPATH_USE_LINK_PATH TRUE
+	BUILD_WITH_INSTALL_RPATH TRUE
+)
+
+add_custom_command(TARGET occlusion_culling POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${CMAKE_CURRENT_SOURCE_DIR}/Supportingfiles"
+		"${_outdir}/Supportingfiles")
+add_custom_command(TARGET occlusion_culling POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${CMAKE_CURRENT_SOURCE_DIR}/assets"
+		"${_outdir}/assets")
+add_custom_command(TARGET occlusion_culling POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${GLES_FONT_SHADERS_DIR}"
+		"${_outdir}/FontShaders")
+
+install(TARGETS occlusion_culling
+	RUNTIME DESTINATION bin/occlusion_culling)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Supportingfiles"
+	DESTINATION bin/occlusion_culling)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+	DESTINATION bin/occlusion_culling)
+install(DIRECTORY "${GLES_FONT_SHADERS_DIR}"
+	DESTINATION bin/occlusion_culling)
