@@ -7,6 +7,14 @@
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib;$ORIGIN/../../lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 
-add_subdirectory(opencl)
-add_subdirectory(vulkan)
-add_subdirectory(opengles)
+# Each sample set is gated by its per-API switch (see the top-level CMakeLists
+# for SDK_PLATFORM_TARGET and the SDK_BUILD_<API> options).
+if (SDK_BUILD_OPENCL)
+	add_subdirectory(opencl)
+endif()
+if (SDK_BUILD_VULKAN)
+	add_subdirectory(vulkan)
+endif()
+if (SDK_BUILD_OPENGLES)
+	add_subdirectory(opengles)
+endif()

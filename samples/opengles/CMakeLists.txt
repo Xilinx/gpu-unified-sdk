@@ -19,5 +19,13 @@ set(GLES_WINDOW_H "1080" CACHE STRING "OpenGL ES sample window height")
 # engine and several samples. Samples stage this next to their binary.
 set(GLES_FONT_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../lib/sdk/GlesFramework/FontShaders")
 
-add_subdirectory(opengl_es_2.0)
-add_subdirectory(opengl_es_3.0)
+# GLES version sub-selection. On ZynqMP (Mali 400) only the OpenGL ES 2.0
+# samples are built; on Versal2 (Mali G78AE) both 2.0 and 3.0 are built. The
+# SDK_BUILD_OPENGLES_2_0 / _3_0 switches (top-level CMakeLists) control this and
+# can be overridden explicitly.
+if (SDK_BUILD_OPENGLES_2_0)
+	add_subdirectory(opengl_es_2.0)
+endif()
+if (SDK_BUILD_OPENGLES_3_0)
+	add_subdirectory(opengl_es_3.0)
+endif()

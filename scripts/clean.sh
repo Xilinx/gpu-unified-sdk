@@ -58,6 +58,7 @@ ARTIFACT_DIRS=(
 	"_deps"                 # CMake FetchContent downloads
 	"Testing"               # CTest output
 	"run"                   # per-sample staged binary + assets output dir
+	"docs"                  # generated Doxygen HTML output (build_documentation.sh)
 )
 #  - Files removed by exact name.
 ARTIFACT_FILES=(

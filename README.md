@@ -2,7 +2,7 @@
 
 # AMD GPU Unified SDK
 
-**A unified development toolkit for AMD Kria, Zynq UltraScale+, Versal, and Ryzen Embedded platforms — bringing the OpenGL ES, OpenCL, and Vulkan SDKs together in a single tree.**
+**A unified development toolkit for AMD Kria, Zynq UltraScale+, and Versal platforms — bringing the OpenGL ES, OpenCL, and Vulkan SDKs together in a single tree.**
 
 [![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](docs/html/index.html)
 [![Platform](https://img.shields.io/badge/platform-AMD-red.svg)](https://www.amd.com)
@@ -15,7 +15,7 @@
 The AMD GPU Unified SDK consolidates the three previously separate GPU SDKs —
 **OpenGL ES**, **OpenCL**, and **Vulkan** — into one CMake project with shared
 support libraries and a common build system. It targets AMD embedded platforms
-including **Kria, Zynq UltraScale+, Versal, and Ryzen Embedded** systems, and
+including **Kria, Zynq UltraScale+, and Versal** systems, and
 ships out-of-the-box samples that customers can use as a starting point for new
 applications and to explore implementation possibilities.
 
@@ -38,8 +38,6 @@ applications and to explore implementation possibilities.
 | AMD Kria SOM | ARM64 | Mali 400 | OpenGL ES | ✅ Full Support (X11, FBDEV, Wayland)|
 | Zynq UltraScale+ | ARM64 | Mali 400 | OpenGL ES | ✅ Full Support (X11, FBDEV, Wayland)|
 | Versal ACAP | ARM64 | Mali G78AE | OpenGL ES / OpenCL / Vulkan | ✅ Full Support (FBDEV, Wayland)|
-| Ryzen Embedded | x86_64 | Radeon | OpenCL / Vulkan | ✅ Full Support (X11, Wayland)|
-| x86 Development | x86_64 | Radeon | OpenGL ES / OpenCL / Vulkan | ✅ Development Support (X11, Wayland) |
 
 ---
 
@@ -74,17 +72,16 @@ applications and to explore implementation possibilities.
       --wayland  VK_KHR_wayland_surface (under a compositor such as Weston)
       --display  VK_KHR_display (direct DRM/KMS, no compositor)
       (no flag)  auto: wayland if a compositor socket is present, else display
-  - opengles - OpenGL ES samples ported from the legacy GPU_SDK_OpenGLES, kept
-    in their original GLES-version grouping (folder/target names lowercased).
-    All samples build on the vendored `SdkGlesFramework` (lib/sdk/GlesFramework)
-    except the standalone X11/fbdev and OpenCL demos noted below.
+  - opengles - OpenGL ES samples, grouped by GLES version. All samples build on
+    the `SdkGlesFramework` (lib/sdk/GlesFramework) except the standalone
+    FBDEV-only EGLImage and OpenCL demos noted below.
     - opengl_es_2.0
       - trianglesample               - Anti-aliased spinning triangle
       - alpha_depthsample            - Alpha blending and depth testing
       - bbox                         - Bounding-box rendering with on-screen text
       - eglpreserve                  - EGL_BUFFER_PRESERVED swap behaviour
-      - eglrenderingsample           - EGLImage rendering (standalone X11/fbdev)
-      - egltexturevideosample        - EGLImage external texture / video (standalone X11/fbdev)
+      - eglrenderingsample           - EGLImage rendering (standalone, FBDEV only)
+      - egltexturevideosample        - EGLImage external texture / video (standalone, FBDEV only)
       - framebufferobject-fbosample  - Render-to-texture via an FBO
       - meshrendersample             - OBJ/3DS mesh loading and lighting
       - multicubesample              - Multiple textured spinning cubes
@@ -107,18 +104,18 @@ applications and to explore implementation possibilities.
     `cd bin/trianglesample && ./trianglesample`).
 
     The windowing backend of the framework-based samples is selected at configure
-    time with `-D SDK_Platform=<wayland|x11|fbdev>` (default `wayland`), matching
-    the legacy GPU_SDK_OpenGLES `ENABLE_WAYLAND` / `ENABLE_X11` / `ENABLE_FBDEV`
-    options:
+    time with `-D SDK_Platform=<wayland|x11|fbdev>` (default `wayland`):
       - `wayland` - render through a Wayland (xdg-shell) surface; run under a
         compositor such as Weston.
       - `x11`     - render into an X11 window; run under an X server.
       - `fbdev`   - render directly to the Linux framebuffer (EGL_DEFAULT_DISPLAY);
         run from a bare console.
     Exactly one backend is compiled, and only that backend's system libraries are
-    linked. `eglrenderingsample` and `egltexturevideosample` are standalone legacy
-    X11/fbdev EGLImage demos (they manage their own surface) and always build
-    against X11 independently of `SDK_Platform`.
+    linked. `eglrenderingsample` and `egltexturevideosample` are standalone
+    EGLImage demos that manage their own surface; they are **FBDEV only** (run
+    from a bare console). They build independently of `SDK_Platform` (their build
+    links X11 for the standalone codebase, but the samples are intended to run on
+    the framebuffer).
   - opencl
     - hello-world-c           - Array addition on the CPU only (no OpenCL, baseline reference)
     - hello-world-opencl      - Array addition in an OpenCL kernel (scalar)
@@ -151,11 +148,17 @@ most of the build time dependencies through the Google repo.
 
 Instructions below assume that path to the repo checkout is at `/path/to/src`.
 
+> **Important:** No sample sets are built by default. Add a platform preset
+> (e.g. `-D SDK_PLATFORM_TARGET=versal2`) or per-API switches
+> (e.g. `-D SDK_BUILD_VULKAN=ON`) to your `cmake` command — see
+> [Selecting what to build](#selecting-what-to-build) below.
+
 ## Host configuration
 
 ```bash
 cmake \
     -G Ninja \
+    -D SDK_PLATFORM_TARGET=versal2 \
     /path/to/sdk
 ```
 
@@ -167,16 +170,85 @@ Assuming Yocto SDK ins installed at `/path/to/yocto_sdk`.
 ```bash
 source /yocto/build/tmp/deploy/sdk/environment-setup-cortexa72-cortexa53-amd-linux
 
-XLNX_SDK=/path/to/yocto_sdk \
+AMD_SDK=/path/to/yocto_sdk \
 cmake \
     -G Ninja \
     -D CMAKE_BUILD_TYPE=Release \
-    -D CMAKE_TOOLCHAIN_FILE=xlnx.cmake \
+    -D CMAKE_TOOLCHAIN_FILE=sdk.cmake \
     -D SDK_Platform=wayland \
+    -D SDK_PLATFORM_TARGET=versal2 \
 ```
 
 `SDK_Platform` selects the OpenGL ES samples' windowing backend
 (`wayland` (default) | `x11` | `fbdev`); see the `samples/opengles` notes above.
+`SDK_PLATFORM_TARGET` selects *which* sample sets are built (nothing by default);
+see [Selecting what to build](#selecting-what-to-build) below.
+
+## Selecting what to build
+
+**Nothing is built by default** — you must opt in to the sample sets you want,
+either with a target platform preset or with the explicit per-API switches.
+
+### Target platform preset
+
+`SDK_PLATFORM_TARGET` enables a set of sample sets based on the SoC's GPU
+capabilities:
+
+| `SDK_PLATFORM_TARGET` | GPU | Sample sets enabled |
+|-----------------------|-----|---------------------|
+| `none` (default) | — | nothing (use the per-API switches) |
+| `versal2` | Mali G78AE | OpenGL ES 2.0 + 3.0, OpenCL, Vulkan |
+| `zynqmp` | Mali 400 | OpenGL ES 2.0 only |
+
+```bash
+# Build everything (Versal2 / Mali G78AE)
+cmake -G Ninja -D SDK_PLATFORM_TARGET=versal2 /path/to/sdk
+
+# Build only the ZynqMP (Mali 400) examples -> OpenGL ES 2.0 only
+cmake -G Ninja -D SDK_PLATFORM_TARGET=zynqmp /path/to/sdk
+```
+
+### Per-API switches
+
+All sample sets are **OFF by default**. These ON/OFF options override the
+platform preset, so any combination can be built:
+
+| Option | Default | Effect |
+|--------|---------|--------|
+| `SDK_BUILD_OPENGLES` | OFF | Build the OpenGL ES samples |
+| `SDK_BUILD_OPENGLES_2_0` | OFF | Build the OpenGL ES **2.0** samples |
+| `SDK_BUILD_OPENGLES_3_0` | OFF | Build the OpenGL ES **3.0** samples |
+| `SDK_BUILD_OPENCL` | OFF | Build the OpenCL samples |
+| `SDK_BUILD_VULKAN` | OFF | Build the Vulkan samples |
+
+> Enabling `SDK_BUILD_OPENGLES` without selecting a version builds **both** 2.0
+> and 3.0; use `SDK_BUILD_OPENGLES_2_0` / `_3_0` to pick one.
+
+```bash
+# Build only the OpenCL samples
+cmake -G Ninja \
+    -D SDK_BUILD_OPENGLES=OFF -D SDK_BUILD_OPENCL=ON -D SDK_BUILD_VULKAN=OFF \
+    /path/to/sdk
+
+# Build only the Vulkan samples
+cmake -G Ninja \
+    -D SDK_BUILD_OPENGLES=OFF -D SDK_BUILD_OPENCL=OFF -D SDK_BUILD_VULKAN=ON \
+    /path/to/sdk
+
+# Build only the OpenGL ES samples (both versions)
+cmake -G Ninja \
+    -D SDK_BUILD_OPENGLES=ON -D SDK_BUILD_OPENCL=OFF -D SDK_BUILD_VULKAN=OFF \
+    /path/to/sdk
+```
+
+Only the support libraries for the enabled sample sets are built, so a subset
+build does not require the toolchain packages of the disabled APIs (e.g. a
+ZynqMP / OpenGL-ES-only build needs neither the Vulkan nor OpenCL SDK packages).
+
+> **Note:** Because these are cached CMake options, switching
+> `SDK_PLATFORM_TARGET` after a first configure does not retroactively change the
+> per-API option values. To switch platforms cleanly, configure into a fresh
+> build directory, or pass the `SDK_BUILD_*` switches explicitly.
 
 ## Compile
 
@@ -228,10 +300,9 @@ Sample-specific inputs and arguments:
 
 # 🎨 Complete Sample Reference
 
-> **Note on images:** The snapshots below reference the artwork from the
-> original per-API SDK repositories (`doc_imgs/` for OpenGL ES, `doxygen/images/`
-> for OpenCL and Vulkan). Drop the corresponding image files into those folders
-> to have them render here.
+> **Note on images:** The snapshots below reference artwork under `doc_imgs/`
+> (OpenGL ES) and `doxygen/images/` (OpenCL and Vulkan). Drop the corresponding
+> image files into those folders to have them render here.
 
 ## OpenGL ES Samples
 
@@ -405,7 +476,7 @@ fly, rendering the converted image to the framebuffer frame by frame.
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/eglrenderingsample/`
 
-**Supported Window Environments:** ✅ FBDEV (standalone X11/fbdev)
+**Supported Window Environments:** ✅ FBDEV only
 
 **Description:** Showcases the EGL Image extension, which defines an EGL resource
 type (EGLImage) suitable for sharing 2D arrays of image data between client APIs.
@@ -419,7 +490,7 @@ type (EGLImage) suitable for sharing 2D arrays of image data between client APIs
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/egltexturevideosample/`
 
-**Supported Window Environments:** ✅ FBDEV (standalone X11/fbdev)
+**Supported Window Environments:** ✅ FBDEV only
 
 **Description:** Uses the EGL Image extension in real time: takes a live feed
 from a USB camera (`/dev/video0`) and streams the data as an OpenGL ES texture,
@@ -851,7 +922,7 @@ sample sets:
 - **egl** — EGL context/surface management for the OpenGL ES samples.
 - **gles** — OpenGL ES helper classes and the `SdkGlesFramework` windowing
   abstraction (Wayland / X11 / fbdev), font rendering, texture and matrix
-  utilities ported from the legacy GPU_SDK_OpenGLES CoreFramework.
+  utilities.
 - **vulkan** — RAII-style Vulkan helper classes (context, swapchain, command
   buffers, assets) backing the Vulkan samples.
 - **vulkan-strings / vulkan-vendor-ids** — Debugging helpers that resolve Vulkan

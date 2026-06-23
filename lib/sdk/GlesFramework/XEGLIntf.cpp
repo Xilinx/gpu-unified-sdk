@@ -55,6 +55,18 @@
 
 #include <cstdlib>
 
+/*
+ * EGL_CONTEXT_MINOR_VERSION is a core token since EGL 1.5. Some drivers (e.g. the
+ * Mali 400 / ZynqMP EGL headers) only expose the EGL_KHR_create_context form
+ * (EGL_CONTEXT_MINOR_VERSION_KHR). Fall back to the KHR token (same value) so the
+ * framework builds against both core-1.5 and KHR-only EGL headers.
+ */
+#ifndef EGL_CONTEXT_MINOR_VERSION
+#ifdef EGL_CONTEXT_MINOR_VERSION_KHR
+#define EGL_CONTEXT_MINOR_VERSION EGL_CONTEXT_MINOR_VERSION_KHR
+#endif
+#endif
+
     EGLDisplay CoreEGL::display;
     EGLContext CoreEGL::context;
     EGLSurface CoreEGL::surface;

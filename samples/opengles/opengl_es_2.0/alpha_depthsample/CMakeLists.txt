@@ -26,7 +26,7 @@ target_compile_definitions(alpha_depthsample PRIVATE
 set(_outdir "${CMAKE_CURRENT_BINARY_DIR}/run")
 set_target_properties(alpha_depthsample PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY "${_outdir}"
-	INSTALL_RPATH_USE_LINK_PATH TRUE
+	INSTALL_RPATH_USE_LINK_PATH FALSE
 	BUILD_WITH_INSTALL_RPATH TRUE
 )
 

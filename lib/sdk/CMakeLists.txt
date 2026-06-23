@@ -52,10 +52,20 @@ target_include_directories(SdkIf INTERFACE
 )
 
 
+# SdkCommon is shared by every sample set, so it is always built. The
+# API-specific support libraries are only built when their sample set is
+# enabled, so a subset build (e.g. OpenGL ES only on ZynqMP) does not require
+# the OpenCL / Vulkan / glm toolchain packages.
 add_subdirectory(Common)
-add_subdirectory(OpenCL)
-add_subdirectory(Vulkan)
-add_subdirectory(GlesFramework)
+if (SDK_BUILD_OPENCL)
+	add_subdirectory(OpenCL)
+endif()
+if (SDK_BUILD_VULKAN)
+	add_subdirectory(Vulkan)
+endif()
+if (SDK_BUILD_OPENGLES)
+	add_subdirectory(GlesFramework)
+endif()
 
 # Install the SDK shared libraries so the OpenCL/Vulkan samples can load them on
 # the target. They are installed into "lib" (relative to CMAKE_INSTALL_PREFIX);
@@ -70,6 +80,18 @@ foreach(_lib SdkCommon SdkOpenCL SdkVulkan SdkOpenGL)
 		get_target_property(_lib_type ${_lib} TYPE)
 		if (_lib_type STREQUAL "SHARED_LIBRARY")
 			list(APPEND _sdk_install_libs ${_lib})
+			# Give each SDK shared library an $ORIGIN RPATH so it can locate its
+			# sibling SDK libraries (all installed side-by-side in "lib/"). This
+			# is required for TRANSITIVE loads: e.g. a sample's RUNPATH lets the
+			# loader find libSdkVulkan.so, but RUNPATH (unlike RPATH) is NOT used
+			# to resolve that library's own dependency on libSdkCommon.so. Baking
+			# $ORIGIN into the libraries themselves makes libSdkVulkan.so /
+			# libSdkOpenCL.so find libSdkCommon.so regardless of how they were
+			# loaded. INSTALL_RPATH is applied during install (CMake's install-time
+			# RPATH edit, which the Yocto recipe triggers via cmake_install.cmake),
+			# so build-tree runs keep their normal link-path RPATH.
+			set_target_properties(${_lib} PROPERTIES
+				INSTALL_RPATH "$ORIGIN")
 		endif()
 	endif()
 endforeach()

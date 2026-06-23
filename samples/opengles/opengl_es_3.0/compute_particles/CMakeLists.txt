@@ -22,7 +22,7 @@ target_include_directories(compute_particles PRIVATE
 set(_outdir "${CMAKE_CURRENT_BINARY_DIR}/run")
 set_target_properties(compute_particles PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY "${_outdir}"
-	INSTALL_RPATH_USE_LINK_PATH TRUE
+	INSTALL_RPATH_USE_LINK_PATH FALSE
 	BUILD_WITH_INSTALL_RPATH TRUE
 )
 
