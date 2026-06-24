@@ -1,8 +1,7 @@
 /*
- * Ported from ssw-mktg/GPU_SDK_Vulkan/platform/wsi/wsi.hpp.
+ * Window-system integration (WSI) interface.
  *
- * The libvulkan-stub.h include from the original is dropped: this port calls
- * the Vulkan loader directly (linked via Vulkan::Vulkan), so no manual symbol
+ * Calls the Vulkan loader directly (linked via Vulkan::Vulkan), so no manual symbol
  * loading is required.
  */
 

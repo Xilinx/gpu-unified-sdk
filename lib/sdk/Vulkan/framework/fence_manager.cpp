@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/fence_manager.cpp.
- */
-
 #include "fence_manager.hpp"
 
 namespace VersalGPUSDK

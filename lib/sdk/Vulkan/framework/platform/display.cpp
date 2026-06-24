@@ -1,10 +1,7 @@
 /*
- * Ported from ssw-mktg/GPU_SDK_Vulkan/platform/display/display.cpp.
- *
- * Faithful to the original. Deviations:
+ * Direct-to-display (VK_KHR_display) windowing backend.
  *  - Platform::get() is defined in platform.cpp (runtime backend selection).
- *  - The VK_KHR_display entry points are called directly (loader-exported)
- *    instead of via the symbol wrapper.
+ *  - The VK_KHR_display entry points are called directly (loader-exported).
  */
 
 #include "display.hpp"

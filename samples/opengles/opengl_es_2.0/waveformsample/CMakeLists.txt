@@ -1,7 +1,5 @@
 
 # waveformsample - animated waveform rendering (OpenGL ES 2.0)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/WaveformSample.
-
 file(GLOB WAVEFORMSAMPLE_SOURCES
 	"*.cpp"
 )

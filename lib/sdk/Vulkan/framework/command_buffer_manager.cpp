@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/command_buffer_manager.cpp.
- */
-
 #include "command_buffer_manager.hpp"
 
 namespace VersalGPUSDK

@@ -1,7 +1,5 @@
 
 # yuv2rgbsample - YUV-to-RGB colour conversion on GPU (OpenGL ES 2.0)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/YUV2RGBSample.
-
 file(GLOB YUV2RGBSAMPLE_SOURCES
 	"*.cpp"
 	"*.c"

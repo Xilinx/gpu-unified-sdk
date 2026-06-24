@@ -1,8 +1,7 @@
 /*
- * Ported from ssw-mktg/GPU_SDK_Vulkan/platform/platform.hpp.
+ * Platform abstraction interface.
  *
- * The asset_manager.hpp include from the original is dropped; shader/asset
- * loading lives in framework/assets.{hpp,cpp} in this port.
+ * Shader/asset loading lives in framework/assets.{hpp,cpp}.
  */
 
 #ifndef PLATFORM_HPP
@@ -21,8 +20,7 @@ namespace VersalGPUSDK
 ///
 /// Must be called before the first Platform::get(). Accepts "wayland",
 /// "display", or nullptr/unknown for auto-detection (based on WAYLAND_DISPLAY).
-/// This is an extension over the original framework, which selected the backend
-/// at compile time.
+/// This selects the windowing backend at runtime.
 void platformSetBackend(const char *name);
 
 /// @brief The platform class is to abstract the Vulkan implementation of a

@@ -1,11 +1,10 @@
 
-# OpenGL ES 2.0 samples (ported from GPU_SDK_OpenGLES/OpenGL_ES_2.0).
+# OpenGL ES 2.0 samples.
 add_subdirectory(trianglesample)
 add_subdirectory(alpha_depthsample)
 add_subdirectory(bbox)
 add_subdirectory(eglpreserve)
 add_subdirectory(eglrenderingsample)
-add_subdirectory(egltexturevideosample)
 add_subdirectory(framebufferobject-fbosample)
 add_subdirectory(meshrendersample)
 add_subdirectory(multicubesample)

@@ -1,7 +1,5 @@
 
 # alpha_depthsample - alpha blending and depth testing (OpenGL ES 2.0)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/Alpha_DepthSample.
-
 file(GLOB ALPHA_DEPTHSAMPLE_SOURCES
 	"*.cpp"
 )

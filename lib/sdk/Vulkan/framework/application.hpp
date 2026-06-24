@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/application.hpp.
- */
-
 #ifndef FRAMEWORK_APPLICATION_HPP
 #define FRAMEWORK_APPLICATION_HPP
 

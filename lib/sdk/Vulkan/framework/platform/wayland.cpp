@@ -1,10 +1,8 @@
 /*
- * Ported from ssw-mktg/GPU_SDK_Vulkan/platform/wayland/wayland.cpp.
- *
- * Faithful to the original (xdg-shell based window management). Deviations:
+ * Wayland windowing backend (xdg-shell based window management).
  *  - Platform::get() is defined in platform.cpp (runtime backend selection).
  *  - The surface is created by calling vkCreateWaylandSurfaceKHR directly
- *    (loader-exported) instead of via the symbol wrapper.
+ *    (loader-exported).
  */
 
 #include "wayland.hpp"

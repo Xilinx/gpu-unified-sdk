@@ -1,7 +1,6 @@
 /*
- * Ported from ssw-mktg/GPU_SDK_Vulkan/platform/wayland/wayland.hpp.
+ * Wayland windowing backend (xdg-shell, generated via wayland-scanner).
  *
- * Uses xdg-shell (generated via wayland-scanner) exactly like the original.
  * The per-backend Platform::get() lives in platform.cpp so that both Wayland
  * and Display backends can coexist in one binary and be selected at runtime.
  */

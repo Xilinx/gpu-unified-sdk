@@ -1,12 +1,11 @@
 
 # SdkGlesFramework
 #
-# Vendored from ssw-mktg/GPU_SDK_OpenGLES/CoreFramework. This is the legacy
-# OpenGL ES "CoreFramework" (EGL setup, windowing podium, GLSL compile, matrix
-# API, font engine, texture loaders) that the GLES samples are built on.
+# The OpenGL ES core framework (EGL setup, windowing podium, GLSL compile,
+# matrix API, font engine, texture loaders) that the GLES samples are built on.
 #
-# Windowing backend selection (matches the legacy GPU_SDK_OpenGLES build, which
-# exposed ENABLE_WAYLAND / ENABLE_X11 / ENABLE_FBDEV):
+# Windowing backend selection (exposes ENABLE_WAYLAND / ENABLE_X11 /
+# ENABLE_FBDEV):
 #
 #     -D SDK_Platform=wayland   (default) Wayland + xdg-shell  -> ENABLE_WAYLAND
 #     -D SDK_Platform=x11                 X11 windowing         -> ENABLE_X11

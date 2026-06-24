@@ -676,6 +676,64 @@ Model::obj_get_face(const string& source, Face& f)
     }
 }
 
+/**
+ * Parse an OBJ face line that may describe a polygon with more than three
+ * corners (e.g. quads or n-gons, as exported by Blender) and emit one or more
+ * triangles for it using a simple triangle fan.
+ *
+ * The previous implementation only ever read the first three corners of a face
+ * which silently dropped geometry for quad-based models, producing holes.
+ *
+ * @param source    the source line to parse (without the leading "f")
+ * @param outFaces  triangles parsed from the polygon are appended here
+ */
+void
+Model::obj_get_faces(const string& source, vector<Face>& outFaces)
+{
+    // Corners are whitespace separated; use a fuzzy split to tolerate runs of
+    // spaces and trailing whitespace.
+    vector<string> elements;
+    Util::split(source, ' ', elements, Util::SplitModeFuzzy);
+
+    if (elements.size() < 3)
+    {
+        return; // Not a valid polygon.
+    }
+
+    // Decode every corner once into (which, v, t, n) index tuples.
+    struct Corner { unsigned int which; unsigned int v; unsigned int t; unsigned int n; };
+    vector<Corner> corners;
+    corners.reserve(elements.size());
+    for (const string& el : elements)
+    {
+        Corner c{0, 0, 0, 0};
+        obj_face_get_index(el, c.which, c.v, c.t, c.n);
+        corners.push_back(c);
+    }
+
+    // Fan triangulation: (0, i, i+1) for i in [1 .. n-2].
+    for (size_t i = 1; i + 1 < corners.size(); i++)
+    {
+        const Corner& a = corners[0];
+        const Corner& b = corners[i];
+        const Corner& c = corners[i + 1];
+
+        Face f;
+        // OBJ indices are 1-based; re-base to 0.
+        f.which = a.which | b.which | c.which;
+        f.v.x(a.v - 1); f.v.y(b.v - 1); f.v.z(c.v - 1);
+        if (f.which & Face::OBJ_FACE_T)
+        {
+            f.t.x(a.t - 1); f.t.y(b.t - 1); f.t.z(c.t - 1);
+        }
+        if (f.which & Face::OBJ_FACE_N)
+        {
+            f.n.x(a.n - 1); f.n.y(b.n - 1); f.n.z(c.n - 1);
+        }
+        outFaces.push_back(f);
+    }
+}
+
 
 bool Model::load_mtl(const std::filesystem::path& filename) {
     std::ifstream file(filename);
@@ -740,13 +798,15 @@ bool Model::load_obj(const std::filesystem::path &filename) {
         return false;
     }
 
-    // Parse MTL file
-    //std::string mtlFilename = filename.replace_extension(".mtl").string();
+    // Parse the companion MTL file (same base name as the OBJ) only if it is
+    // actually present. Many models - including the bundled textured one - have
+    // no .mtl and are coloured by their diffuse texture instead, so a missing
+    // .mtl is normal and must not be reported as an error.
     std::filesystem::path mutableFilename = filename; // Copy filename to a non-const variable
-    std::string mtlFilename = mutableFilename.replace_extension(".mtl").string();
-
-
-    load_mtl(mtlFilename);
+    std::filesystem::path mtlPath = mutableFilename.replace_extension(".mtl");
+    if (std::filesystem::exists(mtlPath)) {
+        load_mtl(mtlPath.string());
+    }
 
     vector<string> sourceVec;
     string curLine;
@@ -757,6 +817,7 @@ bool Model::load_obj(const std::filesystem::path &filename) {
     objects_.clear();  // Clear existing objects before loading
 
     static const string group_definition("g");
+    static const string object_definition("o");
     static const string vertex_definition("v");
     static const string normal_definition("vn");
     static const string texcoord_definition("vt");
@@ -780,12 +841,19 @@ bool Model::load_obj(const std::filesystem::path &filename) {
         }
         string definitionType(curSrc, startPos, num_chars);
 
-        if (definitionType == group_definition) {
+        // Treat both "g" (group) and "o" (object) as the start of a new mesh
+        // object. Some exporters (e.g. Blender) emit only "o" markers.
+        if (definitionType == group_definition || definitionType == object_definition) {
             // Start a new object/group
             if (currentObject != nullptr && !currentObject->faces.empty()) {
                 objects_.push_back(*currentObject);
             }
             currentObject = new Object(definition);  // Start a new object for the group
+        } else if (definitionType == face_definition && currentObject == nullptr) {
+            // Faces appearing before any "g"/"o" marker: create a default
+            // object so geometry from header-less OBJ files is not dropped.
+            currentObject = new Object("default");
+            obj_get_faces(definition, currentObject->faces);
         } else if (definitionType == vertex_definition) {
             vec3 p;
             obj_get_attrib(definition, p);
@@ -799,9 +867,7 @@ bool Model::load_obj(const std::filesystem::path &filename) {
             obj_get_attrib(definition, t);
             texcoords.push_back(t);
         } else if (definitionType == face_definition && currentObject != nullptr) {
-            Face f;
-            obj_get_face(definition, f);
-            currentObject->faces.push_back(f);
+            obj_get_faces(definition, currentObject->faces);
         }
     }
 
@@ -817,22 +883,57 @@ bool Model::load_obj(const std::filesystem::path &filename) {
         gotNormals_ = true;
     }
 
+    // Faces reference positions, normals and texcoords through independent
+    // index spaces (the "v/vt/vn" triplets), and these arrays do not have to
+    // be the same length (Blender-style indexed OBJ exports are a common
+    // example). The mesh builder later dereferences object.vertices[] using
+    // each of those indices separately, so the per-object vertex array must be
+    // large enough to hold the *largest* of the three arrays, with each
+    // attribute stored at its own native index.
+    size_t numVertices = positions.size();
+    if (gotNormals_) {
+        numVertices = std::max(numVertices, normals.size());
+    }
+    if (gotTexcoords_) {
+        numVertices = std::max(numVertices, texcoords.size());
+    }
+
     // Assign vertices to objects
     for (Object& object : objects_) {
-        unsigned int numVertices = positions.size();
-        object.vertices.resize(numVertices);
-        for (unsigned int i = 0; i < numVertices; i++) {
-            Vertex& curVertex = object.vertices[i];
-            curVertex.v = positions[i];
-            if (gotTexcoords_) {
-                curVertex.t = texcoords[i];
-            }
-            if (gotNormals_) {
-                curVertex.n = normals[i];
+        object.vertices.assign(numVertices, Vertex());
+        for (size_t i = 0; i < positions.size(); i++) {
+            object.vertices[i].v = positions[i];
+        }
+        if (gotNormals_) {
+            for (size_t i = 0; i < normals.size(); i++) {
+                object.vertices[i].n = normals[i];
             }
         }
-        // Compute bounding box for perspective projection
-        compute_bounding_box(object);
+        if (gotTexcoords_) {
+            for (size_t i = 0; i < texcoords.size(); i++) {
+                object.vertices[i].t = texcoords[i];
+            }
+        }
+    }
+
+    // Compute the bounding box from the real positions only. The per-object
+    // vertex arrays may be padded (see above) with default (0,0,0) entries to
+    // satisfy independent normal/texcoord index spaces, so iterating those
+    // would distort the bounds and, in turn, the camera centering/scaling.
+    {
+        float minX(FLT_MAX), maxX(-FLT_MAX);
+        float minY(FLT_MAX), maxY(-FLT_MAX);
+        float minZ(FLT_MAX), maxZ(-FLT_MAX);
+        for (const vec3& curVtx : positions) {
+            minX = std::min(minX, curVtx.x());
+            maxX = std::max(maxX, curVtx.x());
+            minY = std::min(minY, curVtx.y());
+            maxY = std::max(maxY, curVtx.y());
+            minZ = std::min(minZ, curVtx.z());
+            maxZ = std::max(maxZ, curVtx.z());
+        }
+        maxVec_ = vec3(maxX, maxY, maxZ);
+        minVec_ = vec3(minX, minY, minZ);
     }
 
     return true;
@@ -878,21 +979,9 @@ Model::find_models()
     vector<std::filesystem::path> pathVec;
     Util::list_files(dataDir, pathVec);
 
-    // Explicitly check for horse.3ds
-    std::filesystem::path horsePath = std::filesystem::absolute(dataDir + "/horse.obj");
-    printf("Checking for horse.3ds at path: %s\n", horsePath.c_str());
-    if (std::filesystem::exists(horsePath))
-    {
-        printf("Adding horse.3ds to model map\n");
-        std::unique_ptr<ModelDescriptor> desc(new ModelDescriptor("audi", MODEL_3DS, horsePath));
-        ModelPrivate::modelMap.insert(std::make_pair("audi", std::move(desc)));
-    }
-    else
-    {
-        printf("horse.3ds not found at path: %s\n", horsePath.c_str());
-    }
-
-    // Automatically add other models found in the directory
+    // Add every supported model found in the directory. Model selection is
+    // driven entirely by the files present (no hard-coded asset names), so the
+    // sample works with any user-supplied .obj/.3ds model dropped in here.
     for (const auto &curPath : pathVec)
     {
         auto ext = curPath.extension();

@@ -1,7 +1,5 @@
 
 # texturemipmapsample - ETC mip-mapped textures (OpenGL ES 2.0)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/TextureMipMapSample.
-
 file(GLOB TEXTUREMIPMAPSAMPLE_SOURCES
 	"*.cpp"
 )

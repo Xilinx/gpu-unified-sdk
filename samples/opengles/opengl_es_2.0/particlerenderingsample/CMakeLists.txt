@@ -1,7 +1,5 @@
 
 # particlerenderingsample - GPU particle / molecule system (OpenGL ES 2.0)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/ParticleRenderingSample.
-
 file(GLOB PARTICLERENDERINGSAMPLE_SOURCES
 	"*.cpp"
 )

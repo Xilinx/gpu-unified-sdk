@@ -1,9 +1,9 @@
 /*
- * Main loop driver, ported from ssw-mktg/GPU_SDK_Vulkan/platform/os/linux.cpp.
+ * Main loop driver.
  *
- * The acquire -> render -> present loop, FPS reporting and frame-count limiting
- * are identical to the original. Added: --wayland / --display flags which select
- * the windowing backend at runtime (the original chose it at compile time).
+ * Implements the acquire -> render -> present loop, FPS reporting and
+ * frame-count limiting. The --wayland / --display flags select the windowing
+ * backend at runtime.
  */
 
 #include "application.hpp"
@@ -35,8 +35,8 @@ double getCurrentTime()
 
 int main(int argc, char **argv)
 {
-	// Parse backend selection and optional frame count. The bare-number form
-	// (maxFrameCount) from the original is preserved.
+	// Parse backend selection and optional frame count. A bare number sets
+	// maxFrameCount.
 	unsigned maxFrameCount = 0;
 	bool useMaxFrameCount = false;
 

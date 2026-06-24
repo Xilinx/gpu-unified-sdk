@@ -1,11 +1,7 @@
 /*
- * Ported from ssw-mktg/GPU_SDK_Vulkan/framework/assets.cpp + the Linux asset
- * manager path resolution from platform/os/linux.cpp.
- *
- * Assets are loaded from "<executable_dir>/assets/<path>", matching the original
- * LinuxAssetManager behaviour. The original read assets through
- * OS::getAssetManager(); here the file reader is self-contained (resolved via
- * /proc/self/exe) to avoid pulling in the OS abstraction layer.
+ * Assets are loaded from "<executable_dir>/assets/<path>". The file reader is
+ * self-contained (the executable directory is resolved via /proc/self/exe) to
+ * avoid pulling in an OS abstraction layer.
  */
 
 #include "assets.hpp"

@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/context.cpp.
- */
-
 #include "context.hpp"
 #include "platform/platform.hpp"
 

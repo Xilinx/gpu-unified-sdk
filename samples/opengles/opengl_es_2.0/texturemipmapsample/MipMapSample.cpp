@@ -133,6 +133,14 @@ bool prepareGraphics(int w, int h)
 #ifdef LOAD_MIPMAPS
     // Method 1: Load pre-generated mipmap levels from separate files
     XTexture::XloadCompressedMipmaps(texturePath.c_str(), imageExtension.c_str(), &textureID);
+
+    // Set explicit, well-defined sampler state: clamp the edges and use
+    // trilinear filtering to actually exercise the loaded mipmap chain.
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 #else /* LOAD_MIPMAPS */
     // Method 2: Load base texture and either generate or disable mipmaps
     glGenTextures(1, &textureID);

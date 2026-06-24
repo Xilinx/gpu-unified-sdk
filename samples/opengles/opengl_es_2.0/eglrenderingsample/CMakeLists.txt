@@ -1,13 +1,10 @@
 
-# eglrenderingsample - EGLImage rendering (OpenGL ES 2.0).
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/EGLRenderingSample.
-#
-# This legacy sample is an X11/fbdev EGL demo: it creates its own EGL surface
-# directly (X11 Display/Window, fbdev mmap) instead of using the CoreFramework
-# Wayland podium. It is therefore built standalone against X11 + EGL + GLESv2
-# (matching the legacy makefile), and does NOT link SdkGlesFramework. It also
-# declares its own local WINDOW_W/WINDOW_H, so the shared window-size defines
-# are intentionally not passed here.
+# eglrenderingsample - EGLImage rendering (OpenGL ES 2.0).#
+# This sample is an X11/fbdev EGL demo: it creates its own EGL surface directly
+# (X11 Display/Window, fbdev mmap) instead of using the SdkGlesFramework Wayland
+# podium. It is therefore built standalone against X11 + EGL + GLESv2 and does
+# NOT link SdkGlesFramework. It also declares its own local WINDOW_W/WINDOW_H, so
+# the shared window-size defines are intentionally not passed here.
 
 find_package(X11 QUIET)
 if(NOT X11_FOUND)

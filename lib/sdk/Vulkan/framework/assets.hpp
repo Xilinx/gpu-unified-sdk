@@ -1,9 +1,8 @@
 /*
- * Ported from ssw-mktg/GPU_SDK_Vulkan/framework/assets.hpp.
+ * Asset loading interface.
  *
  * Assets (shaders + textures) are resolved relative to the executable's
- * "assets/" directory (see assets.cpp). The texture loaders mirror the original
- * framework so the texture-based samples port unchanged.
+ * "assets/" directory (see assets.cpp).
  */
 
 #ifndef FRAMEWORK_ASSETS_HPP

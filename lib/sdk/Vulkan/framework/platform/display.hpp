@@ -1,8 +1,8 @@
 /*
- * Ported from ssw-mktg/GPU_SDK_Vulkan/platform/display/display.hpp.
+ * Direct-to-display (VK_KHR_display) windowing backend interface.
  *
- * The per-backend Platform::get() lives in platform.cpp (runtime selection),
- * and the LinuxAssetManager member is dropped (assets handled separately).
+ * The per-backend Platform::get() lives in platform.cpp (runtime selection);
+ * assets are handled separately in framework/assets.{hpp,cpp}.
  */
 
 #ifndef PLATFORM_DISPLAY_HPP

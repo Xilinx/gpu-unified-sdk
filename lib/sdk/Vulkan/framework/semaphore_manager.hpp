@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/semaphore_manager.hpp.
- */
-
 #ifndef FRAMEWORK_SEMAPHORE_MANAGER_HPP
 #define FRAMEWORK_SEMAPHORE_MANAGER_HPP
 

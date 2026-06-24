@@ -1,7 +1,5 @@
 
 # multicubesample - multiple textured spinning cubes (OpenGL ES 2.0)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/MultiCubeSample.
-
 file(GLOB MULTICUBESAMPLE_SOURCES
 	"*.cpp"
 )

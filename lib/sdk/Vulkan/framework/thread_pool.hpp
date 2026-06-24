@@ -1,6 +1,4 @@
 /*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/thread_pool.hpp.
- *
  * Simple per-thread work-queue thread pool used by the multithreading sample.
  */
 

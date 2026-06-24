@@ -1,7 +1,5 @@
 
 # eglpreserve - EGL_BUFFER_PRESERVED swap behaviour (OpenGL ES 2.0)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/EGLpreserve.
-
 file(GLOB EGLPRESERVE_SOURCES
 	"*.cpp"
 )

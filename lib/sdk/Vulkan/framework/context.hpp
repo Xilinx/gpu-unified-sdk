@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/context.hpp.
- */
-
 #ifndef FRAMEWORK_CONTEXT_HPP
 #define FRAMEWORK_CONTEXT_HPP
 

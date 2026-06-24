@@ -75,7 +75,7 @@ ARTIFACT_FILES=(
 )
 #  - Files removed by glob (object files, archives, generated wayland protocol).
 #    NOTE: deliberately NOT matching "*.obj" - that is a 3D model asset format
-#    used by the samples (e.g. models/audi.obj), not a compiler object file.
+#    used by the samples (e.g. models/car.obj), not a compiler object file.
 #    This toolchain emits ".o" object files.
 ARTIFACT_GLOBS=(
 	"*.o"

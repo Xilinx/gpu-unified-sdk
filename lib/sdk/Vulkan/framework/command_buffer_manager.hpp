@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/command_buffer_manager.hpp.
- */
-
 #ifndef FRAMEWORK_COMMAND_BUFFER_MANAGER_HPP
 #define FRAMEWORK_COMMAND_BUFFER_MANAGER_HPP
 

@@ -1,6 +1,4 @@
 /*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/math.hpp.
- *
  * GLM convenience header shared by the Vulkan samples, plus the GL->Vulkan
  * projection fix-up. glm is provided by the Yocto SDK sysroot (resolved via
  * find_package(glm)) and exposed by the SdkVulkan target.

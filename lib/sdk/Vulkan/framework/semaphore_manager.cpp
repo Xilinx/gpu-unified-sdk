@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/semaphore_manager.cpp.
- */
-
 #include "semaphore_manager.hpp"
 
 namespace VersalGPUSDK

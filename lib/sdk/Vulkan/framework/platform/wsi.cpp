@@ -1,14 +1,10 @@
 /*
- * Ported from ssw-mktg/GPU_SDK_Vulkan/platform/wsi/wsi.cpp.
+ * Window-system integration (WSI): swapchain creation, queue selection,
+ * acquire/present and semaphore-based synchronisation.
  *
- * Deviations from the original, all required by the unified SDK environment:
- *  - No vulkanSymbolWrapper / libvulkan-stub manual symbol loading. We link the
- *    Vulkan loader directly (Vulkan::Vulkan), so all vk* entry points including
- *    KHR surface/swapchain extensions are called directly.
- *  - loadInstanceSymbols()/loadDeviceSymbols() are therefore removed.
- *  - Validation layers / debug report are not enabled.
- * The swapchain creation, queue selection, acquire/present and the
- * semaphore-based synchronisation are identical to the original.
+ * The Vulkan loader is linked directly (Vulkan::Vulkan), so all vk* entry
+ * points including the KHR surface/swapchain extensions are called directly
+ * (no manual symbol loading). Validation layers / debug report are not enabled.
  */
 
 #include "wsi.hpp"

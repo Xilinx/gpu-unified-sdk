@@ -28,7 +28,7 @@ pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
 pkg_check_modules(WAYLAND_PROTOCOLS REQUIRED wayland-protocols)
 
 # Generate the xdg-shell client protocol (header + private code) with
-# wayland-scanner, exactly like the original GPU_SDK_Vulkan wayland backend.
+# wayland-scanner for the Wayland backend.
 pkg_get_variable(WAYLAND_PROTOCOLS_DIR wayland-protocols pkgdatadir)
 find_program(WAYLAND_SCANNER wayland-scanner)
 if (NOT WAYLAND_SCANNER)

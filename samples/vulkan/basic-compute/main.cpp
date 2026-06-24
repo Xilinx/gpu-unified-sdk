@@ -1,10 +1,8 @@
 /*
  * Basic compute Vulkan sample.
  *
- * Ported from ssw-mktg/GPU_SDK_Vulkan/samples/basic_compute/basic_compute.cpp.
- * This is a near-verbatim port: the sample is a VulkanApplication subclass and
- * relies on the framework (Platform/Context/main loop) provided by SdkVulkan,
- * exactly as the original relied on the VersalGPUSDK framework.
+ * The sample is a VulkanApplication subclass and relies on the framework
+ * (Platform/Context/main loop) provided by SdkVulkan.
  *
  * The windowing backend (VK_KHR_wayland_surface or VK_KHR_display) is chosen at
  * runtime via the --wayland / --display flags handled by the framework main

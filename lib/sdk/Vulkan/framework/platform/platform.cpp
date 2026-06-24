@@ -1,13 +1,10 @@
 /*
  * Runtime backend selection.
  *
- * The original GPU_SDK_Vulkan picks a backend at compile time: each backend
- * (wayland.cpp / display.cpp) provides its own Platform::get(), and exactly one
- * is linked. To support both VK_KHR_wayland_surface and VK_KHR_display in a
- * single binary (selectable at runtime), this single Platform::get() chooses
- * the backend based on Platform::setBackend() (set from main() via --wayland /
- * --display) and otherwise auto-detects from the WAYLAND_DISPLAY environment
- * variable.
+ * To support both VK_KHR_wayland_surface and VK_KHR_display in a single binary
+ * (selectable at runtime), this single Platform::get() chooses the backend
+ * based on Platform::setBackend() (set from main() via --wayland / --display)
+ * and otherwise auto-detects from the WAYLAND_DISPLAY environment variable.
  */
 
 #include "display.hpp"

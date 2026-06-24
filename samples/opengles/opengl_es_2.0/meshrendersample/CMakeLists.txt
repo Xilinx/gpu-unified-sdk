@@ -1,6 +1,8 @@
 
 # meshrendersample - OBJ/3DS mesh loading and lighting (OpenGL ES 2.0)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/MeshRenderSample.
+# Renders the CC0 Quaternius "Pickup Truck" (higher-detail low-poly model,
+# colored by its palette atlas texture). Converted from the pack's glTF/GLB to
+# OBJ + PNG, drawn with the textured rendering path (stb_image + sampler).
 
 file(GLOB MESHRENDERSAMPLE_SOURCES
 	"*.cpp"
@@ -14,6 +16,9 @@ target_link_libraries(meshrendersample PRIVATE
 
 target_include_directories(meshrendersample PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}
+	# stb_image.h (public-domain image loader) is included as <stb/stb_image.h>
+	# to decode the model's diffuse texture.
+	${ThirdPartyDir}
 )
 
 target_compile_definitions(meshrendersample PRIVATE

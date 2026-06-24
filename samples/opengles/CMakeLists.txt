@@ -1,17 +1,16 @@
 
 # OpenGL ES samples
 #
-# Ported from ssw-mktg/GPU_SDK_OpenGLES. The directory layout mirrors the legacy
-# SDK (samples grouped by GLES version), with folder/target names lowercased.
+# Samples are grouped by GLES version, with lowercased folder/target names.
 # Each sample has a self-contained CMakeLists.txt (explicit add_executable +
-# link + asset staging), as in the legacy per-sample build files.
+# link + asset staging).
 #
-# All samples build on the vendored SdkGlesFramework (lib/sdk/GlesFramework):
-# the legacy CoreFramework (EGL + Wayland windowing + GLSL compile + matrix /
+# All samples build on the SdkGlesFramework (lib/sdk/GlesFramework):
+# the OpenGL ES core framework (EGL + Wayland windowing + GLSL compile + matrix /
 # font / texture helpers).
 
 # Window size, passed to samples as WINDOW_W / WINDOW_H compile definitions
-# (default 1920x1080), exactly like the legacy build.
+# (default 1920x1080).
 set(GLES_WINDOW_W "1920" CACHE STRING "OpenGL ES sample window width")
 set(GLES_WINDOW_H "1080" CACHE STRING "OpenGL ES sample window height")
 

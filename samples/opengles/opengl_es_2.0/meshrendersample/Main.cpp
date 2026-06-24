@@ -22,6 +22,9 @@
 #include <iomanip>
 #include <sstream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+
 #ifndef WINDOW_W
 #define WINDOW_W 1920
 #endif
@@ -44,10 +47,15 @@ GLuint checkerTextureID;
 GLuint fullScreenQuadVAO;
 GLint iLocPosition = -1;
 GLint iLocNormal = -1;
+GLint iLocTexCoord = -1;
 GLint iLocMVP = -1;
 GLint iLocNormalMatrix = -1;
 GLint iLocLightSourcePosition = -1;
+GLint iLocFillLightPosition = -1;
 GLint iLocMaterialDiffuse = -1;
+GLint iLocDiffuseTexture = -1;
+GLuint modelTextureID = 0;
+bool modelHasTexture_ = false;
 
 GLuint VBO, EBO;
 std::string fontResourceDirectory = "FontShaders/";
@@ -55,6 +63,11 @@ Mesh mesh_;
 LibMatrix::mat4 perspective_;
 LibMatrix::vec3 centerVec_;
 float radius_ = 1.0f;
+// Half-extents of the model's bounding box (set in loadModel). Used to frame
+// the model tightly while keeping it fully on-screen as it spins about Y.
+LibMatrix::vec3 halfExtent_ = LibMatrix::vec3(1.0f, 1.0f, 1.0f);
+// The radius the model sweeps horizontally when rotated about the Y axis.
+float spinRadius_ = 1.0f;
 bool useVbo_ = true;
 bool orientModel_ = false;
 float rotation_ = 0.0f;
@@ -109,12 +122,42 @@ bool loadCheckerboardTexture() {
     return true;
 }
 
+// Decode a PNG/JPG with stb_image and upload it as an RGBA GL texture.
+// Returns true and sets outTextureID on success.
+bool loadImageTexture(const std::string &path, GLuint &outTextureID) {
+    int width = 0, height = 0, channels = 0;
+    // Flip vertically: OBJ/UV origin is bottom-left, GL textures are too, but
+    // most exported PNGs are top-left, so flipping gives correct orientation.
+    stbi_set_flip_vertically_on_load(1);
+    unsigned char *pixels = stbi_load(path.c_str(), &width, &height, &channels, 4);
+    if (!pixels) {
+        printf("loadImageTexture: failed to load '%s': %s\n", path.c_str(), stbi_failure_reason());
+        return false;
+    }
+
+    GL_CHECK(glGenTextures(1, &outTextureID));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, outTextureID));
+    GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+
+    stbi_image_free(pixels);
+    printf("loadImageTexture: loaded '%s' (%dx%d)\n", path.c_str(), width, height);
+    return true;
+}
+
 void createFullScreenQuad() {
     GLfloat vertices[] = {// Positions      // Texture Coords
                           -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
                           -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, 1.0f, 1.0f,  0.0f, 1.0f, 1.0f};
 
-    GLuint indices[] = {0, 1, 2, 1, 3, 2};
+    // 16-bit indices: OpenGL ES 2.0 only guarantees GL_UNSIGNED_BYTE /
+    // GL_UNSIGNED_SHORT for glDrawElements. 32-bit (GL_UNSIGNED_INT) needs the
+    // GL_OES_element_index_uint extension, which the Mali 400 (zynqmp) lacks -
+    // using it there raises GL_INVALID_ENUM (0x0500) every frame.
+    GLushort indices[] = {0, 1, 2, 1, 3, 2};
 
     GL_CHECK(glGenBuffers(1, &VBO));
     GL_CHECK(glGenBuffers(1, &EBO));
@@ -124,6 +167,33 @@ void createFullScreenQuad() {
 
     GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
     GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
+}
+
+// Vertical field of view (degrees) used for the perspective projection.
+static const float kFovYDegrees = 45.0f;
+// Extra breathing room around the model so it does not touch the screen edges.
+static const float kFramingMargin = 1.05f;
+
+// Compute how far back to place the camera so the model is framed tightly but
+// stays fully visible while it spins about the Y axis. Accounts for both the
+// vertical extent (fixed) and the horizontal sweep radius (X/Z), as well as the
+// viewport aspect ratio (the horizontal FOV is wider than the vertical one).
+float computeCameraDistance(float aspectRatio) {
+    const float fovY = kFovYDegrees * static_cast<float>(M_PI) / 180.0f;
+    const float tanHalfFovY = std::tan(fovY * 0.5f);
+    const float tanHalfFovX = tanHalfFovY * aspectRatio;
+
+    // Distance required so the vertical half-extent fits the vertical FOV.
+    float distForHeight = halfExtent_.y() / tanHalfFovY;
+    // Distance required so the horizontal sweep fits the horizontal FOV.
+    float distForWidth = spinRadius_ / tanHalfFovX;
+
+    // We must also clear the part of the model nearest the camera: when a point
+    // at horizontal radius spinRadius_ rotates toward the viewer it sits
+    // spinRadius_ closer than the center, so add it to avoid the model poking
+    // through the near plane / camera.
+    float dist = std::max(distForHeight, distForWidth) + spinRadius_;
+    return dist * kFramingMargin;
 }
 
 bool loadModel(const std::string &modelName) {
@@ -141,6 +211,7 @@ bool loadModel(const std::string &modelName) {
     std::vector<std::pair<Model::AttribType, int>> attribs;
     attribs.push_back(std::make_pair(Model::AttribTypePosition, 3));
     attribs.push_back(std::make_pair(Model::AttribTypeNormal, 3));
+    attribs.push_back(std::make_pair(Model::AttribTypeTexcoord, 2));
 
     model.convert_to_mesh(mesh_, attribs);
 
@@ -149,6 +220,14 @@ bool loadModel(const std::string &modelName) {
     centerVec_ = (model.maxVec() + model.minVec()) * 0.5f;
     LibMatrix::vec3 diffVec = model.maxVec() - model.minVec();
     radius_ = diffVec.length() * 0.5f;
+    halfExtent_ = diffVec * 0.5f;
+
+    // As the model spins about the Y axis, any point sweeps a circle of radius
+    // sqrt(x^2 + z^2) about the center. The largest such radius (using the
+    // box's X/Z half-extents) is the worst-case horizontal extent we must keep
+    // on screen throughout the rotation.
+    spinRadius_ = std::sqrt(halfExtent_.x() * halfExtent_.x() +
+                            halfExtent_.z() * halfExtent_.z());
 
     return true;
 }
@@ -183,10 +262,13 @@ bool prepareGraphics(int width, int height) {
 
     GL_CHECK(iLocPosition = glGetAttribLocation(programID, "position"));
     GL_CHECK(iLocNormal = glGetAttribLocation(programID, "normal"));
+    GL_CHECK(iLocTexCoord = glGetAttribLocation(programID, "texcoord"));
     GL_CHECK(iLocMVP = glGetUniformLocation(programID, "ModelViewProjectionMatrix"));
     GL_CHECK(iLocNormalMatrix = glGetUniformLocation(programID, "NormalMatrix"));
     GL_CHECK(iLocLightSourcePosition = glGetUniformLocation(programID, "LightSourcePosition"));
+    GL_CHECK(iLocFillLightPosition = glGetUniformLocation(programID, "FillLightPosition"));
     GL_CHECK(iLocMaterialDiffuse = glGetUniformLocation(programID, "MaterialDiffuse"));
+    GL_CHECK(iLocDiffuseTexture = glGetUniformLocation(programID, "DiffuseTexture"));
 
     GL_CHECK(glViewport(0, 0, width, height));
     GL_CHECK(glClearColor(0.8f, 0.8f, 0.0f, 1.0f));
@@ -225,24 +307,27 @@ bool prepareGraphics(int width, int height) {
     createFullScreenQuad();
     loadCheckerboardTexture();
 
-    if (!loadModel("audi")) {
+    // Bundled default model is the CC0 "car" (models/car.obj). Drop any other
+    // supported .obj/.3ds file into the models/ directory to render it instead.
+    if (!loadModel("car")) {
         return false;
     }
 
-    std::vector<GLint> attribLocations = {iLocPosition, iLocNormal};
+    // Attribute locations must match the order passed to convert_to_mesh:
+    // position, normal, texcoord.
+    std::vector<GLint> attribLocations = {iLocPosition, iLocNormal, iLocTexCoord};
     mesh_.set_attrib_locations(attribLocations);
 
+    // Load the model's diffuse texture, if one is bundled alongside it.
+    modelHasTexture_ = loadImageTexture("models/car_texture.png", modelTextureID);
+    if (!modelHasTexture_) {
+        printf("prepareGraphics: no model texture loaded; model will render untextured.\n");
+    }
+
     for (const auto &object : model.getObjects()) {
-        if (object.name.find("wheelsA.002_RubberRough.002") != std::string::npos) {
-            // Set material properties for chrome parts
-            printf("Applying chrome color to: %s\n", object.name.c_str());
-            LibMatrix::vec3 chromeColor = LibMatrix::vec3(1.0f, 1.0f, 1.0f); // Silver-like color
-            GL_CHECK(glUniform3fv(iLocMaterialDiffuse, 1, &chromeColor[0]));
-        } else {
-            // Default material properties
-            LibMatrix::vec3 defaultColor = LibMatrix::vec3(0.8f, 0.8f, 0.8f);
-            GL_CHECK(glUniform3fv(iLocMaterialDiffuse, 1, &defaultColor[0]));
-        }
+        // Default material properties for the model.
+        LibMatrix::vec3 defaultColor = LibMatrix::vec3(0.8f, 0.8f, 0.8f);
+        GL_CHECK(glUniform3fv(iLocMaterialDiffuse, 1, &defaultColor[0]));
     }
 
     if (useVbo_) {
@@ -253,7 +338,14 @@ bool prepareGraphics(int width, int height) {
 
     float aspectRatio = float(width) / float(height);
     LibMatrix::Stack4 stack;
-    stack.perspective(45.0f, aspectRatio, 0.01f, 100.0f);
+    // Derive the near/far planes from the model's size so models of any scale
+    // (e.g. a unit-sized OBJ or one exported in millimetres) stay inside the
+    // view frustum. Use the same camera distance the draw loop uses so the far
+    // plane always encloses the model.
+    float camDist = computeCameraDistance(aspectRatio);
+    float nearPlane = std::max(0.01f, radius_ * 0.01f);
+    float farPlane = camDist + radius_ * 2.0f;
+    stack.perspective(kFovYDegrees, aspectRatio, nearPlane, farPlane);
     perspective_ = stack.getCurrent();
 
     return true;
@@ -268,7 +360,7 @@ void renderCheckerboard() {
     GL_CHECK(glUniform1i(texLoc, 0));
 
     GL_CHECK(glDisable(GL_DEPTH_TEST));
-    GL_CHECK(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    GL_CHECK(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0));
     GL_CHECK(glEnable(GL_DEPTH_TEST));
 }
 
@@ -305,7 +397,7 @@ void GraphicsUpdate(void) {
         glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat))));
 
     GL_CHECK(glDisable(GL_DEPTH_TEST));
-    GL_CHECK(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    GL_CHECK(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0));
     GL_CHECK(glEnable(GL_DEPTH_TEST));
 
     renderCheckerboard();
@@ -313,28 +405,68 @@ void GraphicsUpdate(void) {
     // Render the 3D model with depth testing enabled
     GL_CHECK(glUseProgram(programID));
 
-    LibMatrix::vec3 lightPos = LibMatrix::vec3(50.0f, 50.0f, 5.0f);
-    GL_CHECK(glUniform3fv(iLocLightSourcePosition, 1, &lightPos[0]));
+    // Bind the model's diffuse texture to texture unit 0.
+    if (modelHasTexture_) {
+        GL_CHECK(glActiveTexture(GL_TEXTURE0));
+        GL_CHECK(glBindTexture(GL_TEXTURE_2D, modelTextureID));
+        if (iLocDiffuseTexture != -1) {
+            GL_CHECK(glUniform1i(iLocDiffuseTexture, 0));
+        }
+    }
 
-    LibMatrix::vec3 specularColor = LibMatrix::vec3(1.0f, 0.0f, 0.0f);
+    // Frame the model tightly while keeping it fully visible as it spins about
+    // the Y axis. Uses the same helper (and therefore the same distance) that
+    // sized the projection's near/far planes in prepareGraphics.
+    float aspectRatio = float(WINDOW_W) / float(WINDOW_H);
+    float cameraDistance = computeCameraDistance(aspectRatio);
+
+    // Lighting is computed in model space, so position the lights and eye
+    // relative to the model's center and scale by its radius. This keeps the
+    // look consistent regardless of the model's units/size. Lighting is in
+    // object space, so the lights are anchored to the car body and the lit
+    // sides rotate with it (a clean, stable turntable look).
+    const LibMatrix::vec3 &c = centerVec_;
+    float r = radius_;
+
+    // Key light: high, to the front-left of the model.
+    LibMatrix::vec3 keyLightPos =
+        c + LibMatrix::vec3(-1.0f * r, 1.6f * r, 1.4f * r);
+    GL_CHECK(glUniform3fv(iLocLightSourcePosition, 1, &keyLightPos[0]));
+
+    // Fill light: lower, to the opposite side, to soften shadows.
+    LibMatrix::vec3 fillLightPos =
+        c + LibMatrix::vec3(1.5f * r, 0.4f * r, -0.8f * r);
+    if (iLocFillLightPosition != -1) {
+        GL_CHECK(glUniform3fv(iLocFillLightPosition, 1, &fillLightPos[0]));
+    }
+
+    // Glossy, slightly warm paint highlight.
+    LibMatrix::vec3 specularColor = LibMatrix::vec3(0.9f, 0.85f, 0.8f);
     GL_CHECK(glUniform3fv(glGetUniformLocation(programID, "MaterialSpecular"), 1, &specularColor[0]));
-    float shininess = 35.0f;
+    float shininess = 80.0f;
     GL_CHECK(glUniform1f(glGetUniformLocation(programID, "Shininess"), shininess));
-    LibMatrix::vec3 eyePosition = LibMatrix::vec3(0.0f, 0.0f, 5.0f); // Simple camera position
+
+    // Eye is where the camera actually sits: the model is pushed back by
+    // cameraDistance along -Z, so in model space the eye is in front of the
+    // model center along +Z.
+    LibMatrix::vec3 eyePosition = c + LibMatrix::vec3(0.0f, 0.0f, cameraDistance);
     GL_CHECK(glUniform3fv(glGetUniformLocation(programID, "EyePosition"), 1, &eyePosition[0]));
 
     LibMatrix::Stack4 model_view;
-    model_view.translate(-centerVec_.x(), -centerVec_.y(),
-                         -centerVec_.z() - 1.5f); // Centering object in front of camera
 
+    // Compose transforms so the model spins about its own center: first move
+    // the model's center to the origin, rotate there, then push it away from
+    // the camera. Stack4 post-multiplies, so issue them in reverse order.
     rotation_ += rotationSpeed_ * 0.04f;
+    model_view.translate(0.0f, 0.0f, -cameraDistance);
     model_view.rotate(rotation_, 0.0f, 1.0f, 0.0f);
+    model_view.translate(-centerVec_.x(), -centerVec_.y(), -centerVec_.z());
     LibMatrix::mat4 model_view_proj = perspective_ * model_view.getCurrent();
 
     GL_CHECK(glUniformMatrix4fv(iLocMVP, 1, GL_FALSE, &model_view_proj[0][0]));
-    LibMatrix::mat4 normal_matrix = model_view.getCurrent();
-    normal_matrix.inverse().transpose();
-    GL_CHECK(glUniformMatrix4fv(iLocNormalMatrix, 1, GL_FALSE, &normal_matrix[0][0]));
+    // Lighting is done in object space (see light-basic.vert), so no separate
+    // normal matrix is needed: the spin is applied only to the clip-space
+    // position via ModelViewProjectionMatrix.
 
     if (useVbo_) {
         for (const auto &object : model.getObjects()) {
@@ -363,7 +495,7 @@ void GraphicsUpdate(void) {
  * @return Exit status code (0 for success, 1 for failure)
  * 
  * This application demonstrates advanced 3D mesh rendering capabilities:
- * - Complex 3D model loading and parsing (.obj or proprietary formats)
+ * - Complex 3D model loading and parsing (.obj / .3ds formats)
  * - Multiple mesh rendering with different materials and textures
  * - Camera controls and view matrix manipulation
  * - Real-time lighting calculations and material properties

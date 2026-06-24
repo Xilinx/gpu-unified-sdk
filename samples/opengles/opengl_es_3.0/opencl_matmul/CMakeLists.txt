@@ -1,9 +1,7 @@
 
-# opencl_matmul - OpenCL matrix multiplication on the GPU.
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_3.0/OpenCL_MatMul.
-#
+# opencl_matmul - OpenCL matrix multiplication on the GPU.#
 # This sample is pure OpenCL (no EGL/GLES windowing), so it does not link the
-# GLES framework. It is grouped under opengl_es_3.0 to mirror the legacy layout.
+# GLES framework. It is grouped under opengl_es_3.0 for layout consistency.
 
 find_package(OpenCL QUIET)
 if(NOT OpenCL_FOUND)

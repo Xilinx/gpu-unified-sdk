@@ -8,8 +8,6 @@
 #
 #     source run_exports_arm_X11.sh
 #     ./trianglesample
-#
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/run_exports_arm_X11.sh.
 
 # Mali user-space driver location (libEGL / libGLESv2 live here on the target).
 export MALI_LIBS=/usr/lib

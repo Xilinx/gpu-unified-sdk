@@ -133,6 +133,7 @@ private:
     void obj_face_get_index(const std::string& tuple, unsigned int& which,
         unsigned int& v, unsigned int& t, unsigned int& n);
     void obj_get_face(const std::string& description, Face& face);
+    void obj_get_faces(const std::string& description, std::vector<Face>& outFaces);
 
     // For vertices of the bounding box for this model.
     void compute_bounding_box(const Object& object);

@@ -1,10 +1,8 @@
 /*
  * Vulkan sample framework - common definitions.
  *
- * Ported from ssw-mktg/GPU_SDK_Vulkan/framework/common.hpp. The only deviation
- * from the original is that this version includes <vulkan/vulkan.h> directly
- * (the unified SDK links against the Vulkan loader via Vulkan::Vulkan) instead
- * of the libvulkan-stub symbol wrapper, which does not exist here.
+ * This version includes <vulkan/vulkan.h> directly (the SDK links against the
+ * Vulkan loader via Vulkan::Vulkan).
  */
 
 #ifndef FRAMEWORK_COMMON_HPP

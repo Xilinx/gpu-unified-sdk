@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/fence_manager.hpp.
- */
-
 #ifndef FRAMEWORK_FENCE_MANAGER_HPP
 #define FRAMEWORK_FENCE_MANAGER_HPP
 

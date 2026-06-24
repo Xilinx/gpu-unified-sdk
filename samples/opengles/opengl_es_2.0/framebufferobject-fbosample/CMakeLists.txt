@@ -1,7 +1,5 @@
 
 # framebufferobject-fbosample - render-to-texture via FBO (OpenGL ES 2.0)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/FrameBufferObject-FBOSample.
-
 file(GLOB FRAMEBUFFEROBJECT-FBOSAMPLE_SOURCES
 	"*.cpp"
 )

@@ -1,7 +1,3 @@
-/*
- * Ported verbatim from ssw-mktg/GPU_SDK_Vulkan/framework/thread_pool.cpp.
- */
-
 #include "thread_pool.hpp"
 #include <utility>
 

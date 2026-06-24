@@ -1,6 +1,5 @@
 
 # trianglesample - anti-aliased spinning triangle (OpenGL ES 2.0).
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_2.0/TriangleSample.
 
 add_executable(trianglesample
 	TriangleSample.cpp
@@ -26,7 +25,7 @@ set_target_properties(trianglesample PROPERTIES
 )
 
 # Stage the sample's shaders (Supportingfiles/) and the shared FontShaders/
-# folder next to the executable, matching the legacy runtime layout.
+# folder next to the executable.
 add_custom_command(TARGET trianglesample POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 		"${CMAKE_CURRENT_SOURCE_DIR}/Supportingfiles"

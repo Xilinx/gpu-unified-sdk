@@ -1,4 +1,4 @@
-![AMD GPU Unified SDK](doc_imgs/SDK_OpenGLES.png)
+![AMD GPU Unified SDK](doc_imgs/SDK.png)
 
 # AMD GPU Unified SDK
 
@@ -27,8 +27,7 @@ applications and to explore implementation possibilities.
   reused across all sample sets.
 - **🖥️ Multi-Platform Windowing**: Wayland, X11, and framebuffer (fbdev) backends
   selectable at configure time.
-- **⚡ Performance Optimized**: Leverages Mali 400 / Mali G78AE and AMD Radeon
-  GPU hardware acceleration.
+- **⚡ Performance Optimized**: Leverages Mali 400 / Mali G78AE GPU hardware acceleration.
 - **🔧 Developer-Friendly**: One CMake configuration builds the whole tree.
 
 ## 📋 **Supported Platforms**
@@ -81,9 +80,8 @@ applications and to explore implementation possibilities.
       - bbox                         - Bounding-box rendering with on-screen text
       - eglpreserve                  - EGL_BUFFER_PRESERVED swap behaviour
       - eglrenderingsample           - EGLImage rendering (standalone, FBDEV only)
-      - egltexturevideosample        - EGLImage external texture / video (standalone, FBDEV only)
       - framebufferobject-fbosample  - Render-to-texture via an FBO
-      - meshrendersample             - OBJ/3DS mesh loading and lighting
+      - meshrendersample             - OBJ/3DS mesh loading and lighting (textured low-poly pickup)
       - multicubesample              - Multiple textured spinning cubes
       - particlerenderingsample      - GPU particle / molecule system
       - rotozoom                     - Rotation/zoom texture effect
@@ -111,11 +109,10 @@ applications and to explore implementation possibilities.
       - `fbdev`   - render directly to the Linux framebuffer (EGL_DEFAULT_DISPLAY);
         run from a bare console.
     Exactly one backend is compiled, and only that backend's system libraries are
-    linked. `eglrenderingsample` and `egltexturevideosample` are standalone
-    EGLImage demos that manage their own surface; they are **FBDEV only** (run
-    from a bare console). They build independently of `SDK_Platform` (their build
-    links X11 for the standalone codebase, but the samples are intended to run on
-    the framebuffer).
+    linked. `eglrenderingsample` is a standalone EGLImage demo that manages its
+    own surface; it is **FBDEV only** (run from a bare console). It builds
+    independently of `SDK_Platform` (its build links X11 for the standalone
+    codebase, but the sample is intended to run on the framebuffer).
   - opencl
     - hello-world-c           - Array addition on the CPU only (no OpenCL, baseline reference)
     - hello-world-opencl      - Array addition in an OpenCL kernel (scalar)
@@ -152,15 +149,6 @@ Instructions below assume that path to the repo checkout is at `/path/to/src`.
 > (e.g. `-D SDK_PLATFORM_TARGET=versal2`) or per-API switches
 > (e.g. `-D SDK_BUILD_VULKAN=ON`) to your `cmake` command — see
 > [Selecting what to build](#selecting-what-to-build) below.
-
-## Host configuration
-
-```bash
-cmake \
-    -G Ninja \
-    -D SDK_PLATFORM_TARGET=versal2 \
-    /path/to/sdk
-```
 
 ## Target configuration
 
@@ -276,9 +264,6 @@ Notes:
   `output-dX.bmp` and `output-dY.bmp`).
 - Samples print OpenCL kernel profiling information (queued/wait/run time) on
   completion.
-- A `[XRT] ERROR: No devices found` line may be printed by the XRT OpenCL ICD
-  while it probes for FPGA/Alveo devices. It is harmless; the Mali GPU device is
-  selected through its own ICD and the kernels still run.
 
 Sample-specific inputs and arguments:
 
@@ -441,17 +426,27 @@ sampling with rotation and zoom.
 
 #### 10. **Mesh Rendering Sample**
 ![Mesh Sample](doc_imgs/mesh.png)
+<!-- Screenshot pending: capture a render of the bundled CC0 car (models/car.obj) and save it as doc_imgs/mesh.png -->
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/meshrendersample/`
 
 **Supported Window Environments:** ✅ FBDEV  ✅ X11  ✅ Wayland
 
-**Description:** Demonstrates 3D object/mesh rendering for `.obj` files: loading
-and rendering complex 3D geometry.
+**Description:** Demonstrates 3D object/mesh rendering for `.obj`/`.3ds` files:
+loading and rendering complex, textured 3D geometry with lighting.
 
 **Key Techniques:** 3D model loading, complex geometry, material systems, .obj file parsing
 
-**Note:** *USER MUST PROVIDE THEIR OWN OBJECT FILE*
+**Bundled model:** A higher-detail CC0 (public domain) Quaternius "Pickup
+Truck" (~6,964 vertices) is included and loaded by default (`models/car.obj`
+with its palette-atlas texture `models/car_texture.png`), rendered with its
+texture applied. The model ships only as glTF/GLB, so it was converted to OBJ
+(positions, normals, UVs) and its embedded palette atlas extracted to
+`car_texture.png`. To render your own model, drop a supported `.obj` or `.3ds`
+file into the sample's `models/` directory; model selection is driven by the
+files present. If your model is UV-mapped, place its diffuse texture at
+`models/car_texture.png` to have it textured (PNG/JPG are decoded via the
+bundled public-domain `stb_image` loader); otherwise it renders untextured.
 
 ---
 
@@ -460,14 +455,14 @@ and rendering complex 3D geometry.
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/yuv2rgbsample/`
 
-**Supported Window Environments:** ✅ FBDEV  ✅ X11
+**Supported Window Environments:** ✅ FBDEV  ✅ X11  ✅ Wayland
 
 **Description:** Fast color conversion from YUV to RGB in a GLSL shader on the
 fly, rendering the converted image to the framebuffer frame by frame.
 
 **Key Techniques:** Color space conversion, video textures, GPU-based color conversion
 
-**Note:** *USER MUST PROVIDE THEIR OWN YUV IMAGE FILE*
+**Note:** *USER MUST PROVIDE THEIR OWN YUV IMAGE FILE. Sample yuv file is in Supportingfiles/out.yuv*
 
 ---
 
@@ -485,22 +480,7 @@ type (EGLImage) suitable for sharing 2D arrays of image data between client APIs
 
 ---
 
-#### 13. **EGL Image Live Video Streaming Sample**
-![EGL Video Sample](doc_imgs/Video_Texture.png)
-
-**📁 Source**: `samples/opengles/opengl_es_2.0/egltexturevideosample/`
-
-**Supported Window Environments:** ✅ FBDEV only
-
-**Description:** Uses the EGL Image extension in real time: takes a live feed
-from a USB camera (`/dev/video0`) and streams the data as an OpenGL ES texture,
-updating it each frame. Using EGL Image instead of `glTexImage2D` is much faster.
-
-**Key Techniques:** EGL Image extension, real-time video streaming, live camera feed, texture streaming
-
----
-
-#### 14. **EGL Preserve Sample**
+#### 13. **EGL Preserve Sample**
 ![EGL Preserve Sample](doc_imgs/EGL_preserve.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/eglpreserve/`
@@ -514,7 +494,7 @@ and context management for efficient rendering and resource management.
 
 ---
 
-#### 15. **BBOX Sample**
+#### 14. **BBOX Sample**
 ![BBOX Sample](doc_imgs/bbox.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/bbox/`
@@ -943,13 +923,3 @@ data under the sample's `Supportingfiles/`, `shaders/`, `assets/`, or
 # 📄 License
 
 This project is licensed under the terms in the [LICENSE](LICENSE) file.
-
-# 🏆 Acknowledgments
-
-- AECG PSAS — System Software
-- Mali GPU driver developers
-- The Khronos OpenGL ES, OpenCL, and Vulkan communities
-
-## 🏷️ Trademarks
-
-OpenCL and Vulkan are registered trademarks of the Khronos Group Inc.

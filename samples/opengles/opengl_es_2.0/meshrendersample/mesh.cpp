@@ -13,6 +13,7 @@
 
 
 Mesh::Mesh() :
+    material_(nullptr),
     vertex_size_(0), interleave_(false), vbo_update_method_(VBOUpdateMethodMap),
     vbo_usage_(VBOUsageStatic)
 {

@@ -1,9 +1,7 @@
 /*
  * Vulkan spinning_cube sample.
  *
- * Ported from ssw-mktg/GPU_SDK_Vulkan/samples/spinning_cube/spinning_cube.cpp. Near-verbatim:
- * the sample is a VulkanApplication subclass driven by the SdkVulkan framework.
- * Only the framework include paths were rewritten and shader loading hardened.
+ * The sample is a VulkanApplication subclass driven by the SdkVulkan framework.
  *
  * Windowing backend (VK_KHR_wayland_surface / VK_KHR_display) is chosen at
  * runtime via --wayland / --display, handled by the framework main loop.

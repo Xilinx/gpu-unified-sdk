@@ -1,7 +1,5 @@
 
 # occlusion_culling - Hi-Z GPU occlusion culling (OpenGL ES 3.1)
-# Ported from ssw-mktg/GPU_SDK_OpenGLES/OpenGL_ES_3.0/occlusion_culling.
-
 file(GLOB OCCLUSION_CULLING_SOURCES
 	"*.cpp"
 	"common/*.cpp"
