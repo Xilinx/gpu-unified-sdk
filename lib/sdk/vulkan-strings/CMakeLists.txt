@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 cmake_minimum_required(VERSION 3.22)
 

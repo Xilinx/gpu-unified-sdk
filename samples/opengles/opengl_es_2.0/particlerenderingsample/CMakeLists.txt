@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # particlerenderingsample - GPU particle / molecule system (OpenGL ES 2.0)
 file(GLOB PARTICLERENDERINGSAMPLE_SOURCES

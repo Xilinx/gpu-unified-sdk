@@ -1,4 +1,7 @@
 #!/bin/bash
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # Documentation generation script for the AMD GPU Unified SDK.
 # Generates HTML API documentation (OpenGL ES, OpenCL, Vulkan libraries and

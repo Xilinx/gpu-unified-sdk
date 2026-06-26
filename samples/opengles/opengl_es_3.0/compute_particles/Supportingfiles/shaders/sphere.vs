@@ -1,6 +1,8 @@
 #version 310 es
 
 
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
 in vec3 position;
 
 out vec2 vShadowTexel;

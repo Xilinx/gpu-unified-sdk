@@ -120,7 +120,7 @@ AMD GPU Unified SDK</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">Zynq UltraScale+   </td><td class="markdownTableBodyNone">ARM64   </td><td class="markdownTableBodyNone">Mali 400   </td><td class="markdownTableBodyNone">OpenGL ES   </td><td class="markdownTableBodyNone">✅ Full Support (X11, FBDEV, Wayland)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Versal ACAP   </td><td class="markdownTableBodyNone">ARM64   </td><td class="markdownTableBodyNone">Mali G78AE   </td><td class="markdownTableBodyNone">OpenGL ES / OpenCL / Vulkan   </td><td class="markdownTableBodyNone">✅ Full Support (FBDEV, Wayland)   </td></tr>
+<td class="markdownTableBodyNone">Versal AI Edge Series Gen 2   </td><td class="markdownTableBodyNone">ARM64   </td><td class="markdownTableBodyNone">Mali G78AE   </td><td class="markdownTableBodyNone">OpenGL ES / OpenCL / Vulkan   </td><td class="markdownTableBodyNone">✅ Full Support (FBDEV, Wayland)   </td></tr>
 </table>
 <hr  />
 <h1><a class="anchor" id="autotoc_md5"></a>
@@ -171,7 +171,6 @@ Project structure</h1>
 <li>eglpreserve - EGL_BUFFER_PRESERVED swap behaviour</li>
 <li>eglrenderingsample - EGLImage rendering (standalone, FBDEV only)</li>
 <li>framebufferobject-fbosample - Render-to-texture via an FBO</li>
-<li>meshrendersample - OBJ/3DS mesh loading and lighting (textured low-poly pickup)</li>
 <li>multicubesample - Multiple textured spinning cubes</li>
 <li>particlerenderingsample - GPU particle / molecule system</li>
 <li>rotozoom - Rotation/zoom texture effect</li>
@@ -225,7 +224,7 @@ Build</h1>
 <p>SDK application uses CMake as a build system and comes with most of the build time dependencies through the Google repo.</p>
 <p>Instructions below assume that path to the repo checkout is at <code>/path/to/src</code>.</p>
 <blockquote class="doxtable">
-<p>&zwj;<b>Important:</b> No sample sets are built by default. Add a platform preset (e.g. <code>-D SDK_PLATFORM_TARGET=versal2</code>) or per-API switches (e.g. <code>-D SDK_BUILD_VULKAN=ON</code>) to your <code>cmake</code> command — see Selecting what to build below. </p>
+<p>&zwj;<b>Important:</b> No sample sets are built by default. Add a platform preset (e.g. <code>-D SDK_PLATFORM_TARGET=versal-2ve-2vm</code>) or per-API switches (e.g. <code>-D SDK_BUILD_VULKAN=ON</code>) to your <code>cmake</code> command — see Selecting what to build below. </p>
 </blockquote>
 <h2><a class="anchor" id="autotoc_md7"></a>
 Target configuration</h2>
@@ -238,7 +237,7 @@ Target configuration</h2>
 <div class="line">    -D CMAKE_BUILD_TYPE=Release \</div>
 <div class="line">    -D CMAKE_TOOLCHAIN_FILE=sdk.cmake \</div>
 <div class="line">    -D SDK_Platform=wayland \</div>
-<div class="line">    -D SDK_PLATFORM_TARGET=versal2 \</div>
+<div class="line">    -D SDK_PLATFORM_TARGET=versal-2ve-2vm \</div>
 </div><!-- fragment --><p><code>SDK_Platform</code> selects the OpenGL ES samples' windowing backend (<code>wayland</code> (default) | <code>x11</code> | <code>fbdev</code>); see the <code>samples/opengles</code> notes above. <code>SDK_PLATFORM_TARGET</code> selects <em>which</em> sample sets are built (nothing by default); see Selecting what to build below.</p>
 <h2><a class="anchor" id="autotoc_md8"></a>
 Selecting what to build</h2>
@@ -252,12 +251,12 @@ Target platform preset</h3>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>none</code> (default)   </td><td class="markdownTableBodyNone">—   </td><td class="markdownTableBodyNone">nothing (use the per-API switches)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>versal2</code>   </td><td class="markdownTableBodyNone">Mali G78AE   </td><td class="markdownTableBodyNone">OpenGL ES 2.0 + 3.0, OpenCL, Vulkan    </td></tr>
+<td class="markdownTableBodyNone"><code>versal-2ve-2vm</code>   </td><td class="markdownTableBodyNone">Mali G78AE   </td><td class="markdownTableBodyNone">OpenGL ES 2.0 + 3.0, OpenCL, Vulkan    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>zynqmp</code>   </td><td class="markdownTableBodyNone">Mali 400   </td><td class="markdownTableBodyNone">OpenGL ES 2.0 only   </td></tr>
 </table>
-<div class="fragment"><div class="line"># Build everything (Versal2 / Mali G78AE)</div>
-<div class="line">cmake -G Ninja -D SDK_PLATFORM_TARGET=versal2 /path/to/sdk</div>
+<div class="fragment"><div class="line"># Build everything (Versal AI Edge Series Gen 2 / Mali G78AE)</div>
+<div class="line">cmake -G Ninja -D SDK_PLATFORM_TARGET=versal-2ve-2vm /path/to/sdk</div>
 <div class="line"> </div>
 <div class="line"># Build only the ZynqMP (Mali 400) examples -&gt; OpenGL ES 2.0 only</div>
 <div class="line">cmake -G Ninja -D SDK_PLATFORM_TARGET=zynqmp /path/to/sdk</div>
@@ -405,17 +404,7 @@ OpenGL ES Samples</h2>
 <p><b>Key Techniques:</b> 2D transformations, texture sampling, classic demo effects</p>
 <hr  />
 <h4><a class="anchor" id="autotoc_md35"></a>
-10. &lt;strong&gt;Mesh Rendering Sample&lt;/strong&gt;</h4>
-<p><img src="doc_imgs/mesh.png" alt="Mesh Sample" class="inline"/></p>
-<p><b>📁 Source</b>: <code>samples/opengles/opengl_es_2.0/meshrendersample/</code></p>
-<p><b>Supported Window Environments:</b> ✅ FBDEV ✅ X11 ✅ Wayland</p>
-<p><b>Description:</b> Demonstrates 3D object/mesh rendering for <code>.obj</code>/<code>.3ds</code> files: loading and rendering complex, textured 3D geometry with lighting.</p>
-<p><b>Key Techniques:</b> 3D model loading, complex geometry, material systems, .obj file parsing</p>
-<p><b>Bundled model:</b> A higher-detail CC0 (public domain) Quaternius "Pickup
-Truck" (~6,964 vertices) is included and loaded by default (<code>models/car.obj</code> with its palette-atlas texture <code>models/car_texture.png</code>), rendered with its texture applied. The model ships only as glTF/GLB, so it was converted to OBJ (positions, normals, UVs) and its embedded palette atlas extracted to <code>car_texture.png</code>. To render your own model, drop a supported <code>.obj</code> or <code>.3ds</code> file into the sample's <code>models/</code> directory; model selection is driven by the files present. If your model is UV-mapped, place its diffuse texture at <code>models/car_texture.png</code> to have it textured (PNG/JPG are decoded via the bundled public-domain <code>stb_image</code> loader); otherwise it renders untextured.</p>
-<hr  />
-<h4><a class="anchor" id="autotoc_md37"></a>
-11. &lt;strong&gt;YUV2RGB Conversion Sample&lt;/strong&gt;</h4>
+10. &lt;strong&gt;YUV2RGB Conversion Sample&lt;/strong&gt;</h4>
 <p><img src="doc_imgs/Yuv2rgb.png" alt="YUV2RGB Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opengles/opengl_es_2.0/yuv2rgbsample/</code></p>
 <p><b>Supported Window Environments:</b> ✅ FBDEV ✅ X11 ✅ Wayland</p>
@@ -423,33 +412,33 @@ Truck" (~6,964 vertices) is included and loaded by default (<code>models/car.obj
 <p><b>Key Techniques:</b> Color space conversion, video textures, GPU-based color conversion</p>
 <p><b>Note:</b> <em>USER MUST PROVIDE THEIR OWN YUV IMAGE FILE. Sample yuv file is in Supportingfiles/out.yuv</em></p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md39"></a>
-12. &lt;strong&gt;EGL Image Texture Swapping Sample&lt;/strong&gt;</h4>
+<h4><a class="anchor" id="autotoc_md37"></a>
+11. &lt;strong&gt;EGL Image Texture Swapping Sample&lt;/strong&gt;</h4>
 <p><img src="doc_imgs/EGL1.png" alt="EGL Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opengles/opengl_es_2.0/eglrenderingsample/</code></p>
 <p><b>Supported Window Environments:</b> ✅ FBDEV only</p>
 <p><b>Description:</b> Showcases the EGL Image extension, which defines an EGL resource type (EGLImage) suitable for sharing 2D arrays of image data between client APIs.</p>
 <p><b>Key Techniques:</b> EGL Image extension, texture sharing, EGL resource management</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md41"></a>
-13. &lt;strong&gt;EGL Preserve Sample&lt;/strong&gt;</h4>
+<h4><a class="anchor" id="autotoc_md39"></a>
+12. &lt;strong&gt;EGL Preserve Sample&lt;/strong&gt;</h4>
 <p><img src="doc_imgs/EGL_preserve.png" alt="EGL Preserve Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opengles/opengl_es_2.0/eglpreserve/</code></p>
 <p><b>Supported Window Environments:</b> ✅ FBDEV ✅ X11 ✅ Wayland</p>
 <p><b>Description:</b> Demonstrates EGL buffer preservation (<code>EGL_BUFFER_PRESERVED</code>) and context management for efficient rendering and resource management.</p>
 <p><b>Key Techniques:</b> EGL context preservation, buffer management, efficient rendering</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md43"></a>
-14. &lt;strong&gt;BBOX Sample&lt;/strong&gt;</h4>
+<h4><a class="anchor" id="autotoc_md41"></a>
+13. &lt;strong&gt;BBOX Sample&lt;/strong&gt;</h4>
 <p><img src="doc_imgs/bbox.png" alt="BBOX Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opengles/opengl_es_2.0/bbox/</code></p>
 <p><b>Supported Window Environments:</b> ✅ FBDEV ✅ X11 ✅ Wayland</p>
 <p><b>Description:</b> Demonstrates bounding-box rendering, reading the bbox coordinates and class label from a text file in the same directory.</p>
 <p><b>Key Techniques:</b> BBOX rendering, on-screen text</p>
 <hr  />
-<h3><a class="anchor" id="autotoc_md45"></a>
+<h3><a class="anchor" id="autotoc_md43"></a>
 &lt;strong&gt;OpenGL ES 3.0 Samples&lt;/strong&gt;</h3>
-<h4><a class="anchor" id="autotoc_md46"></a>
+<h4><a class="anchor" id="autotoc_md44"></a>
 1. &lt;strong&gt;Compute Particles Sample&lt;/strong&gt;</h4>
 <p><img src="doc_imgs/compute_particles.png" alt="Compute Particles Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opengles/opengl_es_3.0/compute_particles/</code></p>
@@ -457,7 +446,7 @@ Truck" (~6,964 vertices) is included and loaded by default (<code>models/car.obj
 <p><b>Description:</b> GPU compute-shader particle system using modern OpenGL ES 3.x compute capabilities for high-performance particle simulation.</p>
 <p><b>Key Techniques:</b> GPU compute shaders, SSBO, compute dispatch, memory barriers, parallel processing</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md48"></a>
+<h4><a class="anchor" id="autotoc_md46"></a>
 2. &lt;strong&gt;Occlusion Culling Sample&lt;/strong&gt;</h4>
 <p><img src="doc_imgs/occlusion_culling.png" alt="Occlusion Culling Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opengles/opengl_es_3.0/occlusion_culling/</code></p>
@@ -465,136 +454,136 @@ Truck" (~6,964 vertices) is included and loaded by default (<code>models/car.obj
 <p><b>Description:</b> Visibility optimization using Hi-Z GPU occlusion culling for improved rendering performance in complex scenes.</p>
 <p><b>Key Techniques:</b> Hi-Z occlusion, indirect rendering, visibility optimization</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md50"></a>
+<h4><a class="anchor" id="autotoc_md48"></a>
 3. &lt;strong&gt;OpenCL Matrix Multiplication Sample&lt;/strong&gt;</h4>
 <p><b>📁 Source</b>: <code>samples/opengles/opengl_es_3.0/opencl_matmul/</code></p>
 <p><b>Description:</b> Demonstrates GPGPU computing using OpenCL for high-performance matrix operations with OpenGL ES interoperability (built only when OpenCL is found).</p>
 <p><b>Key Techniques:</b> GPGPU computing, OpenCL interop, matrix operations, parallel computing</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md52"></a>
+<h2><a class="anchor" id="autotoc_md50"></a>
 OpenCL Samples</h2>
-<h4><a class="anchor" id="autotoc_md53"></a>
+<h4><a class="anchor" id="autotoc_md51"></a>
 1. &lt;strong&gt;Hello World OpenCL&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/hello_world_output.png" alt="Hello World Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/hello-world-opencl/</code></p>
 <p><b>Description:</b> Basic integer array addition implemented in an OpenCL kernel.</p>
 <p><b>Key Techniques:</b> OpenCL initialization, kernel creation, buffer management, basic parallel computation</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md55"></a>
+<h4><a class="anchor" id="autotoc_md53"></a>
 2. &lt;strong&gt;Hello World C&lt;/strong&gt;</h4>
 <p><b>📁 Source</b>: <code>samples/opencl/hello-world-c/</code></p>
 <p><b>Description:</b> Simplified C-style OpenCL sample demonstrating basic concepts without C++ abstractions. No output — if it runs successfully, your machine can run OpenCL.</p>
 <p><b>Key Techniques:</b> C-style OpenCL API usage, context creation, simple kernel execution</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md57"></a>
+<h4><a class="anchor" id="autotoc_md55"></a>
 3. &lt;strong&gt;Mandelbrot Set&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/Mandelbrot.png" alt="Mandelbrot Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/mandelbrot/</code></p>
 <p><b>Description:</b> Generates Mandelbrot fractal data, testing each pixel to determine the iterations needed to rule out set membership, output as a grayscale bitmap (<code>output.bmp</code>).</p>
 <p><b>Key Techniques:</b> Parallel fractal computation, 2D indexing, mathematical computation on GPU</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md59"></a>
+<h4><a class="anchor" id="autotoc_md57"></a>
 4. &lt;strong&gt;Mandelbrot Benchmark&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/Mandelbrot_benchmark.png" alt="Mandelbrot Benchmark Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/mandelbrot-benchmark/</code></p>
 <p><b>Description:</b> Performance-focused Mandelbrot generator with timing and image perturbation for benchmarking GPU compute. Expects a 1024x1024 <code>assets/input.bmp</code>.</p>
 <p><b>Key Techniques:</b> Performance measurement, GPU benchmarking, optimized parallel computation</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md61"></a>
+<h4><a class="anchor" id="autotoc_md59"></a>
 5. &lt;strong&gt;Image Scaling&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/ImageScaling.png" alt="Image Scaling Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/image-scaling/</code></p>
 <p><b>Description:</b> Uses OpenCL image objects and a sampler to resize images on the GPU.</p>
 <p><b>Key Techniques:</b> OpenCL image objects, 2D image processing, bilinear interpolation, image resampling</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md63"></a>
+<h4><a class="anchor" id="autotoc_md61"></a>
 6. &lt;strong&gt;Sobel Filter&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/SobelFilter.png" alt="Sobel Filter Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/sobel-filter/</code></p>
 <p><b>Description:</b> Edge detection using the Sobel operator with vector loads, computing X and Y gradients and combining them. Expects an <code>assets/input.bmp</code> whose width is a multiple of 16.</p>
 <p><b>Key Techniques:</b> Edge detection, convolution kernels, gradient computation, vector loads</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md65"></a>
+<h4><a class="anchor" id="autotoc_md63"></a>
 7. &lt;strong&gt;Sobel Filter (No Vectors)&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/SobelFilter.png" alt="Sobel No Vectors Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/sobel-filter-no-vectors/</code></p>
 <p><b>Description:</b> Sobel edge detection without vector types — one pixel per work item — demonstrating an alternative optimization approach.</p>
 <p><b>Key Techniques:</b> Scalar-based image processing, alternative optimization strategies, edge detection</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md67"></a>
+<h4><a class="anchor" id="autotoc_md65"></a>
 8. &lt;strong&gt;Gaussian Filter&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/GaussianFilter.png" alt="Gaussian Filter Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/gaussian-filter/</code></p>
 <p><b>Description:</b> Applies a Gaussian blur to a PNG image (<code>assets/input.png</code>) for noise reduction and smoothing.</p>
 <p><b>Key Techniques:</b> Gaussian blur, separable convolution, image smoothing, noise reduction</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md69"></a>
+<h4><a class="anchor" id="autotoc_md67"></a>
 9. &lt;strong&gt;Convolution Filter&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/ConvolutionFilter.png" alt="Convolution Filter Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/convolution-filter/</code></p>
 <p><b>Description:</b> General-purpose 3x3/5x5 convolution filtering framework supporting various kernel types.</p>
 <p><b>Key Techniques:</b> General convolution, custom kernels, flexible image processing framework</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md71"></a>
+<h4><a class="anchor" id="autotoc_md69"></a>
 10. &lt;strong&gt;FIR Filter&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/FirFilter.png" alt="FIR Filter Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/fir-filter/</code></p>
 <p><b>Description:</b> Finite Impulse Response filtering for signal and image processing on the GPU.</p>
 <p><b>Key Techniques:</b> FIR filtering, signal processing, digital filter implementation</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md73"></a>
+<h4><a class="anchor" id="autotoc_md71"></a>
 11. &lt;strong&gt;Depth Map&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/DepthMap.png" alt="Depth Map Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/depth-map/</code></p>
 <p><b>Description:</b> Stereo-vision depth map generation for obstacle detection. Expects a stereo pair <code>assets/left.bmp</code> and <code>assets/right.bmp</code>.</p>
 <p><b>Key Techniques:</b> Stereo vision, depth estimation, correlation algorithms, 3D reconstruction</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md75"></a>
+<h4><a class="anchor" id="autotoc_md73"></a>
 12. &lt;strong&gt;ML Classifier&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/MLClassifier.png" alt="ML Classifier Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/opencl/ml-classifier/</code></p>
 <p><b>Description:</b> Simple ML image classifier that computes average intensity and applies a linear classifier to label images as "Bright" or "Dark".</p>
 <p><b>Key Techniques:</b> Machine learning, image classification, statistical analysis, feature extraction</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md77"></a>
+<h4><a class="anchor" id="autotoc_md75"></a>
 13. &lt;strong&gt;Matrix Multiply&lt;/strong&gt;</h4>
 <p><b>📁 Source</b>: <code>samples/opencl/matrix-multiply/</code></p>
 <p><b>Description:</b> High-performance SGEMM benchmark suite with many kernel variants (local memory, work-group optimization, tiling). Run <code>./matrix_multiply -h</code> for options including <code>-va</code> (validate vs. CPU) and <code>-csv &lt;file&gt;</code>.</p>
 <p><b>Key Techniques:</b> Matrix operations, local memory optimization, work-group coordination, linear algebra</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md79"></a>
+<h4><a class="anchor" id="autotoc_md77"></a>
 14. &lt;strong&gt;Integer 64-bit&lt;/strong&gt;</h4>
 <p><b>📁 Source</b>: <code>samples/opencl/integer-64-bit/</code></p>
 <p><b>Description:</b> Pixel sum / sum-of-squares using 64-bit integers and atomics. Requires the <code>cl_khr_int64_base_atomics</code> device extension.</p>
 <p><b>Key Techniques:</b> 64-bit arithmetic, extended precision, atomics</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md81"></a>
+<h4><a class="anchor" id="autotoc_md79"></a>
 15. &lt;strong&gt;SGEMM&lt;/strong&gt;</h4>
 <p><b>📁 Source</b>: <code>samples/opencl/sgemm/</code></p>
 <p><b>Description:</b> Single-precision general matrix multiply (<code>alpha*A*B + beta*C</code>) showcasing optimized linear algebra operations.</p>
 <p><b>Key Techniques:</b> BLAS operations, optimized matrix multiplication, performance tuning</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md83"></a>
+<h4><a class="anchor" id="autotoc_md81"></a>
 16. &lt;strong&gt;Vector Hello World&lt;/strong&gt;</h4>
 <p><b>📁 Source</b>: <code>samples/opencl/vector-hello-world/</code></p>
 <p><b>Description:</b> Introduction to vector operations in OpenCL, demonstrating SIMD programming patterns and vector data types.</p>
 <p><b>Key Techniques:</b> Vector operations, SIMD programming, parallel data processing</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md85"></a>
+<h4><a class="anchor" id="autotoc_md83"></a>
 17. &lt;strong&gt;OpenCL Template&lt;/strong&gt;</h4>
 <p><b>📁 Source</b>: <code>samples/opencl/opencl-template/</code></p>
 <p><b>Description:</b> Minimal boilerplate skeleton for creating new OpenCL applications with standard setup and error handling.</p>
 <p><b>Key Techniques:</b> Project template, best practices, error handling, code organization</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md87"></a>
+<h4><a class="anchor" id="autotoc_md85"></a>
 18. &lt;strong&gt;ADAS Lane Detection&lt;/strong&gt;</h4>
 <p><b>📁 Source</b>: <code>samples/opencl/adas-lane-detection/</code></p>
 <p><b>Description:</b> Lane visualization via Sobel edge detection (ADAS use case). Expects a 1024x1024 <code>assets/input.bmp</code>.</p>
 <p><b>Key Techniques:</b> Edge detection, ADAS, image processing</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md89"></a>
+<h2><a class="anchor" id="autotoc_md87"></a>
 Vulkan Samples</h2>
-<h4><a class="anchor" id="autotoc_md90"></a>
+<h4><a class="anchor" id="autotoc_md88"></a>
 1. &lt;strong&gt;Triangle&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/hello_triangle.png" alt="Hello Triangle Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/vulkan/triangle/</code></p>
@@ -602,7 +591,7 @@ Vulkan Samples</h2>
 <p><b>Description:</b> Minimal Vulkan sample that renders a single triangle. Demonstrates swapchain setup, render passes, and the basic graphics pipeline.</p>
 <p><b>Key Techniques:</b> Vulkan initialization, swapchain, render pass, graphics pipeline, vertex buffers</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md92"></a>
+<h4><a class="anchor" id="autotoc_md90"></a>
 2. &lt;strong&gt;Texture (Rotating)&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/rotating_texture.gif" alt="Rotating Texture Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/vulkan/texture/</code></p>
@@ -610,7 +599,7 @@ Vulkan Samples</h2>
 <p><b>Description:</b> Renders a textured quad and animates its rotation. Demonstrates texture loading, samplers, and uniform buffer updates.</p>
 <p><b>Key Techniques:</b> Texture loading, samplers, uniform buffers, animation, transformation matrices</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md94"></a>
+<h4><a class="anchor" id="autotoc_md92"></a>
 3. &lt;strong&gt;Basic Compute&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/basic_compute.gif" alt="Compute Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/vulkan/basic-compute/</code></p>
@@ -618,7 +607,7 @@ Vulkan Samples</h2>
 <p><b>Description:</b> Compute-shader particle simulation rendered via graphics, demonstrating compute-to-graphics synchronization and storage buffers.</p>
 <p><b>Key Techniques:</b> Compute shaders, storage buffers, memory barriers, dispatch, particle simulation</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md96"></a>
+<h4><a class="anchor" id="autotoc_md94"></a>
 4. &lt;strong&gt;Multithreading&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/multithreading.gif" alt="Multithreading Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/vulkan/multithreading/</code></p>
@@ -626,7 +615,7 @@ Vulkan Samples</h2>
 <p><b>Description:</b> Multi-threaded secondary command buffer recording and submission for improved CPU-side performance.</p>
 <p><b>Key Techniques:</b> Multithreaded command buffers, synchronization, parallel rendering</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md98"></a>
+<h4><a class="anchor" id="autotoc_md96"></a>
 5. &lt;strong&gt;Multisampling&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/multisampling.gif" alt="Multisampling Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/vulkan/multisampling/</code></p>
@@ -634,7 +623,7 @@ Vulkan Samples</h2>
 <p><b>Description:</b> Enables and uses multisample anti-aliasing (MSAA) for smoother rendering.</p>
 <p><b>Key Techniques:</b> Multisample anti-aliasing, render pass setup, resolve attachments</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md100"></a>
+<h4><a class="anchor" id="autotoc_md98"></a>
 6. &lt;strong&gt;Spinning Cube&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/spinning_cube.gif" alt="Spinning Cube Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/vulkan/spinning-cube/</code></p>
@@ -642,7 +631,7 @@ Vulkan Samples</h2>
 <p><b>Description:</b> Renders a textured 3D cube with rotation animation and depth buffering.</p>
 <p><b>Key Techniques:</b> 3D transformations, depth buffer, animation, uniform buffers</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md102"></a>
+<h4><a class="anchor" id="autotoc_md100"></a>
 7. &lt;strong&gt;Multi-pass Rendering&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/multipass.gif" alt="Multi-pass Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/vulkan/multipass/</code></p>
@@ -650,7 +639,7 @@ Vulkan Samples</h2>
 <p><b>Description:</b> Deferred shading using multiple subpasses and framebuffers, useful for post-processing and advanced rendering effects.</p>
 <p><b>Key Techniques:</b> Render passes, subpasses, framebuffers, image attachments, post-processing</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md104"></a>
+<h4><a class="anchor" id="autotoc_md102"></a>
 8. &lt;strong&gt;ASTC Texture Compression&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/astc.gif" alt="ASTC Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/vulkan/astc/</code></p>
@@ -658,7 +647,7 @@ Vulkan Samples</h2>
 <p><b>Description:</b> Loads and displays ASTC compressed textures, with fallback to PNG if ASTC is not supported.</p>
 <p><b>Key Techniques:</b> ASTC texture loading, compressed textures, format fallback</p>
 <hr  />
-<h4><a class="anchor" id="autotoc_md106"></a>
+<h4><a class="anchor" id="autotoc_md104"></a>
 9. &lt;strong&gt;Mipmapping&lt;/strong&gt;</h4>
 <p><img src="doxygen/images/mipmapping_manually_generated.gif" alt="Mipmapping Sample" class="inline"/></p>
 <p><b>📁 Source</b>: <code>samples/vulkan/mipmapping/</code></p>
@@ -666,7 +655,7 @@ Vulkan Samples</h2>
 <p><b>Description:</b> Shows the use and visual effect of mipmaps, demonstrating both pre-generated and GPU-generated mipmaps.</p>
 <p><b>Key Techniques:</b> Mipmaps, texture sampling, image blitting, LOD selection</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md108"></a>
+<h1><a class="anchor" id="autotoc_md106"></a>
 🏗️ Framework Architecture</h1>
 <p>The unified SDK provides shared support libraries under <code>lib/sdk/</code>, reused by all sample sets:</p>
 <ul>
@@ -677,10 +666,10 @@ Vulkan Samples</h2>
 <li><b>vulkan-strings / vulkan-vendor-ids</b> — Debugging helpers that resolve Vulkan enums and GPU vendor names to human-readable strings.</li>
 </ul>
 <p>The OpenCL samples build on the shared <code>common</code> image/bitmap helpers plus a thin OpenCL context/kernel management layer.</p>
-<h1><a class="anchor" id="autotoc_md109"></a>
+<h1><a class="anchor" id="autotoc_md107"></a>
 🔧 Adding New Samples</h1>
 <p>The build system is designed to be general. To add a new sample, copy an existing one in the relevant <code>samples/&lt;api&gt;/</code> directory, rename the target in its <code>CMakeLists.txt</code>, and add an <code>add_subdirectory(&lt;newsample&gt;)</code> to the parent <code>CMakeLists.txt</code>. Place source files in the sample folder, shaders/kernels and data under the sample's <code>Supportingfiles/</code>, <code>shaders/</code>, <code>assets/</code>, or <code>cl_kernels/</code> directory as appropriate.</p>
-<h1><a class="anchor" id="autotoc_md110"></a>
+<h1><a class="anchor" id="autotoc_md108"></a>
 📄 License</h1>
 <p>This project is licensed under the terms in the [LICENSE](LICENSE) file. </p>
 </div></div><!-- PageDoc -->
@@ -689,7 +678,7 @@ Vulkan Samples</h2>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Jun 25 2026 09:16:45 for AMD GPU Unified SDK by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+    <li class="footer">Generated on Fri Jun 26 2026 14:03:32 for AMD GPU Unified SDK by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
 </body>

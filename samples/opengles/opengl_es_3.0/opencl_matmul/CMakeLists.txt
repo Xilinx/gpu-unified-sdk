@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # opencl_matmul - OpenCL matrix multiplication on the GPU.#
 # This sample is pure OpenCL (no EGL/GLES windowing), so it does not link the

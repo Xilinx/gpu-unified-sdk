@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # eglrenderingsample - EGLImage rendering (OpenGL ES 2.0).#
 # This sample is an X11/fbdev EGL demo: it creates its own EGL surface directly

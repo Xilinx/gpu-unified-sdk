@@ -1,5 +1,7 @@
 #version 310 es
 
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
 /*
  * This program merges the block-wise prefix sums of the input into a 
  * single prefix sum. It does this by adding the sum of elements in a previous

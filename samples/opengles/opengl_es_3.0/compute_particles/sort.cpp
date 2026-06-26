@@ -1,3 +1,7 @@
+/*
+* Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+*/
+
 #include "sort.h"
 #include "common/matrix.h"
 #include "common/glutil.h"

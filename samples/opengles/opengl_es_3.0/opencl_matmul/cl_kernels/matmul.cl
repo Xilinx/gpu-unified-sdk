@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 // Host-provided macros:
 // - M: Rows of A and C
 // - N: Columns of A, rows of B

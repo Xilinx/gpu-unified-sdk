@@ -1,5 +1,7 @@
 #version 310 es
 
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
 /*
  * We perform an inclusive prefix sum over the sums array
  * In order to do this in one step (one shader dispatch)

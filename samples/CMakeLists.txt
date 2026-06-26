@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # Make installed sample binaries find the SDK shared libraries (installed into
 # "lib", see lib/sdk/CMakeLists.txt) via an $ORIGIN-relative RPATH, so they run

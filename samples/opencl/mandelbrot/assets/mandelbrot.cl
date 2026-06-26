@@ -1,110 +1,68 @@
 /*
- * The number of iterations before we assume a point is in the Mandelbrot set.
- * Increasing this value has no effect since as we are returning the output as unsigned chars,
- * 255 is the maximum value that can be returned.
+ * Copyright (C) 2024-2025 Advanced Micro Devices, Inc.  All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-#define MAX_ITER 255
 
-/**
- * \brief Create a float4 containing the x positions of x and the 3 adjacent pixels.
- * \param[in] x First pixel position to use.
- * \return An vector of 4 floats containing x, x + 1, x + 2, and x + 3.
+/*
+ * Escape-time Mandelbrot set evaluation. The output byte for each pixel is the
+ * iteration count at which the orbit escaped (clamped at MANDELBROT_MAX_ITER,
+ * which marks points considered inside the set). Each work-item produces four
+ * adjacent pixels on one row; host range is (width / 4, height).
  */
-float4 createStartX(int x)
-{
-    return (float4)(x, x + 1, x + 2, x + 3);
-}
+#define MANDELBROT_MAX_ITER 255
 
- /**
- * \brief Mandelbrot kernel function.
- * \details Evaluates whether a set of four adjacent pixels are part of the Mandelbrot
- *          set. The output is an array where each value represents how many iterations
- *          were required to be able to decide whether the point in imaginary space
- *          is part of the Mandelbrot set or not. A value of MAX_ITER represents a point
- *          that is part of the Mandelbrot set. All other values represent points that are
- *          not part of the Mandelbrot set.
- *          A value is in the Mandelbrot set if the results of the calculations remain bounded.
- * \param[out] output Output data buffer. Must be width * height * sizeof(cl_uchar) in size.
- * \param[in] width Width of the data required.
- * \param[in] height Height of the data required.
- */
 __kernel void mandelbrot(__global uchar* restrict output,
                          const int width,
                          const int height)
 {
-    /* [Kernel size] */
-    /*
-     * Each kernel calculates 4 output pixels in the same row (hence the '* 4').
-     * x is in the range [0, width] in steps of 4.
-     * y is in the range [0, height].
-     */
-    int x = get_global_id(0) * 4;
-    int y = get_global_id(1);
-    /* [Kernel size] */
+    const int firstX = get_global_id(0) * 4;
+    const int y      = get_global_id(1);
 
-    /* [Create inputs] */
-    /*
-     * Calculate the coordinates of the four pixels in the real and imaginary space.
-     * Scale the coordinates by the height and width such that the same image is produced for all values, just at different resolutions.
-     * The real coordinate is scaled to the range [0, 2.5] (using '/ width * 2.5f') and then shifted to be in the range [-2, 0.5] (using '-2').
-     * The imaginary coordinate is scaled to the range [0, 2] (using '/ ((float) height) * 2' and then shifted to be in the range [-1, 1] (using '-1').
-     * The resulting ranges ([-2, 0.5], [-1, 1]) are the limits of the interesting parts of the Mandelbrot set.
-     * Four pixels (adjacent in x (real) dimension) are calulated per kernel instance. Therefore, we calculate real coordinates for 4 pixels.
-     */
-    float4 initialReal = -2 + (createStartX(x) / (float)width * 2.5f);
-    float4 initialImaginary = -1 + (y / (float)height * 2);
-
-    float4 real = initialReal;
-    float4 imaginary = initialImaginary;
-    /* [Create inputs] */
-
-    /* This will store the number of iterations for each of the four pixels */
-    int4 iterationsPerPixel = (int4)(0, 0, 0, 0);
-    /* Total number of iterations for this kernel instance. */
-    int iterations = 0;
-    int4 mask;
-
-    /* [Calculation] */
-    /*
-     * Loop until we can say that all pixels are not part
-     * of the Mandelbrot set or the maximum number of
-     * iterations has been reached.
-     */
-    do
+    for (int pixel = 0; pixel < 4; ++pixel)
     {
-        iterations++;
-        if (iterations > MAX_ITER)
+        const int x = firstX + pixel;
+
+        /* Map the pixel onto the classic [-2,0.5] x [-1,1] viewing window. */
+        const float cReal = -2.0f + ((float)x / (float)width)  * 2.5f;
+        const float cImag = -1.0f + ((float)y / (float)height) * 2.0f;
+
+        float zReal = cReal;
+        float zImag = cImag;
+        int   iteration = 0;
+
+        while (iteration < MANDELBROT_MAX_ITER)
         {
-            break;
+            const float zRealSq = zReal * zReal;
+            const float zImagSq = zImag * zImag;
+            if (zRealSq + zImagSq > 4.0f)
+            {
+                break;
+            }
+
+            zImag = 2.0f * zReal * zImag + cImag;
+            zReal = zRealSq - zImagSq + cReal;
+            ++iteration;
         }
 
-        /* Backup the real value as its used in both calculations but changed by the first. */
-        float4 oldReal = real;
-
-        /* Evaluate the equation. */
-        real = real * real - imaginary * imaginary + initialReal;
-        imaginary = 2 * oldReal * imaginary + initialImaginary;
-
-        /*
-         * Calculate which indices to update.
-         * Mathematically, if the result of the calculation becomes greater that 2, it will continue to infinity.
-         * Therefore, if the result becomes greater than 2 it cannot be part of the Mandelbrot set and we stop adding to it's iteration count.
-         * To get the absolute value of the calculation we have squared and added the components, therefore we must test it against
-         * 4 (2 squared).
-         */
-        float4 absoluteValue = real * real + imaginary * imaginary;
-        /* For vector input isless(x, y) returns -1 per component if x < y. */
-        mask = isless(absoluteValue, (float4) 4.0f);
-        /* Increase the iterations per pixel (if they are less than 4). */
-        iterationsPerPixel -= mask;
-    } while(any(mask));
-    /* [Calculation] */
-
-    /* [Store] */
-    /*
-     * Write the result to the output buffer.
-     * Convert the output to unsigned char to make it easier to write to a bitmap.
-     */
-    vstore4(convert_uchar4(iterationsPerPixel), 0, output + x + y * width);
-    /* [Store] */
+        output[y * width + x] = (uchar)iteration;
+    }
 }

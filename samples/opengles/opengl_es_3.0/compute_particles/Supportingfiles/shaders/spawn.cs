@@ -1,6 +1,8 @@
 #version 310 es
 
 
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
 float noise1f(int x)
 {
     x = (x<<13) ^ x;

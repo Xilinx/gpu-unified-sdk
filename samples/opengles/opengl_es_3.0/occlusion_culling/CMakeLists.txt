@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # occlusion_culling - Hi-Z GPU occlusion culling (OpenGL ES 3.1)
 file(GLOB OCCLUSION_CULLING_SOURCES

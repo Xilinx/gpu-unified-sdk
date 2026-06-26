@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # eglpreserve - EGL_BUFFER_PRESERVED swap behaviour (OpenGL ES 2.0)
 file(GLOB EGLPRESERVE_SOURCES

@@ -1,34 +1,38 @@
- /**
- * \brief Vectorized Hello World kernel function.
- * \param[in] inputA First input array.
- * \param[in] inputB Second input array.
- * \param[out] output Output array.
+/*
+ * Copyright (C) 2024-2025 Advanced Micro Devices, Inc.  All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
- /* [Vector Implementation] */
+
+/*
+ * Vectorised counterpart of hello_world_opencl. Each work-item adds four
+ * adjacent integers using int4 loads/stores, so the host launches a 1-D range
+ * of (length / 4) work-items.
+ */
 __kernel void hello_world_vector(__global int* restrict inputA,
                                  __global int* restrict inputB,
                                  __global int* restrict output)
 {
-    /*
-     * We have reduced the global work size (n) by a factor of 4 compared to the hello_world_opencl sample.
-     * Therefore, i will now be in the range [0, (n / 4) - 1].
-     */
-    int i = get_global_id(0);
-
-    /*
-     * Load 4 integers into 'a'.
-     * The offset calculation is implicit from the size of the vector load.
-     * For vloadN(i, p), the address of the first data loaded would be p + i * N.
-     * Load from the data from the address: inputA + i * 4.
-     */
-    int4 a = vload4(i, inputA);
-    /* Do the same for inputB */
-    int4 b = vload4(i, inputB);
-
-    /*
-     * Do the vector addition.
-     * Store the result at the address: output + i * 4.
-     */
-    vstore4(a + b, i, output);
+    const size_t block = get_global_id(0);
+    const int4 a = vload4(block, inputA);
+    const int4 b = vload4(block, inputB);
+    vstore4(a + b, block, output);
 }
-/* [Vector Implementation] */

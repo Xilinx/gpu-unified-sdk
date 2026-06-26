@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 cmake_minimum_required(VERSION 3.22)
 
@@ -32,7 +35,6 @@ endif()
 if (SDK_HOST)
 	target_compile_definitions(sdk_compile_flags INTERFACE
 		SDK_SHARE_DIR=\"${DemoDir}\"
-		SDK_MODELS_DIR=\"${RootDir}/3rdparty/glmark2/data/models\"
 	)
 endif()
 

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -24,7 +27,7 @@ set(ModulesDir "${SdkDir}/cmake/modules")
 #   1. SDK_PLATFORM_TARGET - optional target SoC preset that sets sensible
 #      DEFAULTS based on that platform's GPU capabilities:
 #        none (default)    - nothing enabled (use the per-API switches)
-#        versal2           - Mali G78AE: OpenGL ES 2.0 + 3.0, OpenCL, Vulkan
+#        versal-2ve-2vm    - Mali G78AE: OpenGL ES 2.0 + 3.0, OpenCL, Vulkan
 #        zynqmp            - Mali 400  : OpenGL ES 2.0 only
 #
 #   2. SDK_BUILD_<API> / SDK_BUILD_OPENGLES_<ver> - explicit per-API and per-
@@ -34,8 +37,8 @@ set(ModulesDir "${SdkDir}/cmake/modules")
 #        -D SDK_BUILD_OPENCL=ON   -> build only the OpenCL samples
 #
 set(SDK_PLATFORM_TARGET "none" CACHE STRING
-	"Target SoC preset for default sample selection: none | versal2 | zynqmp")
-set_property(CACHE SDK_PLATFORM_TARGET PROPERTY STRINGS none versal2 zynqmp)
+	"Target SoC preset for default sample selection: none | versal-2ve-2vm | zynqmp")
+set_property(CACHE SDK_PLATFORM_TARGET PROPERTY STRINGS none versal-2ve-2vm zynqmp)
 
 if (SDK_PLATFORM_TARGET STREQUAL "none")
 	# No preset: everything OFF by default; enable via SDK_BUILD_* switches.
@@ -51,7 +54,7 @@ elseif (SDK_PLATFORM_TARGET STREQUAL "zynqmp")
 	set(_def_gles3    OFF)
 	set(_def_opencl   OFF)
 	set(_def_vulkan   OFF)
-elseif (SDK_PLATFORM_TARGET STREQUAL "versal2")
+elseif (SDK_PLATFORM_TARGET STREQUAL "versal-2ve-2vm")
 	# Mali G78AE: everything.
 	set(_def_opengles ON)
 	set(_def_gles2    ON)
@@ -60,7 +63,7 @@ elseif (SDK_PLATFORM_TARGET STREQUAL "versal2")
 	set(_def_vulkan   ON)
 else()
 	message(FATAL_ERROR
-		"SDK_PLATFORM_TARGET must be 'none', 'versal2' or 'zynqmp' (got '${SDK_PLATFORM_TARGET}')")
+		"SDK_PLATFORM_TARGET must be 'none', 'versal-2ve-2vm' or 'zynqmp' (got '${SDK_PLATFORM_TARGET}')")
 endif()
 
 # Per-API switches (defaults come from the selected platform; an explicit

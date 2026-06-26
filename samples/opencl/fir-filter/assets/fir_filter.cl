@@ -1,99 +1,63 @@
-/* FW_SCALE = 1 / 256. */
-#define FW_SCALE 0.00390625f
-#define FW_UL (30.0f * FW_SCALE)
-#define FW_UM (5.0f * FW_SCALE)
-#define FW_UR (6.0f * FW_SCALE)
-#define FW_CL (19.0f * FW_SCALE)
-#define FW_CM (30.0f * FW_SCALE)
-#define FW_CR (9.0f * FW_SCALE)
-#define FW_BL (15.0f * FW_SCALE)
-#define FW_BM (5.0f * FW_SCALE)
-#define FW_BR (40.0f * FW_SCALE)
-
-/**
- * \brief FIR filter kernel function.
- * \param[in] input Input image data in row-major format.
- * \param[in] width Width of the image passed in as input.
- * \param[out] output Output image after FIR has been applied. Resulting image depends on the coefficients used.
+/*
+ * Copyright (C) 2024-2025 Advanced Micro Devices, Inc.  All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
+
+/*
+ * Separable-free 3x3 FIR (finite impulse response) image filter.
+ *
+ * The nine filter taps below are fixed coefficients (1/256 fixed-point weights)
+ * that define the response of this particular filter. Each work-item produces
+ * four consecutive output pixels on one row; the host therefore launches a 2-D
+ * range of (width / 4, height).
+ */
+#define FIR_INV_SCALE (1.0f / 256.0f)
+
 __kernel void fir_float(__global const float* restrict input,
                         __global float* restrict output,
                         const int width)
 {
-    /* [Kernel size] */
-    /*
-     * Each kernel calculates 4 output pixels in the same row (hence the '* 4').
-     * column is in the range [0, width] in steps of 4.
-     * row is in the range [0, height].
-     */
-    const int column = get_global_id(0) * 4;
-    const int row = get_global_id(1);
-    /* Offset calculates the position in the linear data for the row and the column. */
-    const int offset = row * width + column;
-    /* [Kernel size] */
+    /* Row-major 3x3 tap weights. */
+    const float taps[9] = { 30.0f,  5.0f,  6.0f,
+                            19.0f, 30.0f,  9.0f,
+                            15.0f,  5.0f, 40.0f };
 
-    /* Accumulator array of 4 floats. */
-    float4 accumulator = (float4)0.0f;
+    const int firstColumn = get_global_id(0) * 4;
+    const int row         = get_global_id(1);
 
-    /*
-     * As mentioned before the kernel works on a 6x3 window.
-     * e.g. If the data in the input array is as follows:
-     * [0  1  2  3  4  5 ]
-     * [6  7  8  9  10 11]
-     * [12 13 14 15 16 17]
-     *
-     * We load overlapping data from the first row into 3 vectors:
-     *
-     * data0 = [0 1 2 3]
-     * data1 = [1 2 3 4]
-     * data2 = [2 3 4 5]
-     *
-     * Which means the first result of accumulator will be equal to:
-     * accumulator.s0 = data0.s0 * FW_UL + data1.s0 * FW_UM + data2.s0 * FW_UR
-     *
-     * The same is done for the second and third row, which makes acc.s0 the sum of 0, 1, 2, 6, 7, 8, 12, 13 and 14
-     * multiplied by the corresponding coefficients.
-     * If this indices are compared with the input array, we can see the 3x3 window of the FIR filter.
-     */
+    for (int pixel = 0; pixel < 4; ++pixel)
+    {
+        const int column = firstColumn + pixel;
+        const int anchor = row * width + column;
 
-    /* [Load first row] */
-    /*
-     * Access the first row in the 6x3 window to apply FW_U coefficients.
-     * data1 can be constructed from the other vectors without doing an additional load.
-     */
-    float4 data0 = vload4(0, input + offset);
-    float4 data2 = vload4(0, input + offset + 2);
-    float4 data1 = (float4)(data0.s12, data2.s12);
-    /* [Load first row] */
+        float accumulator = 0.0f;
+        for (int ky = 0; ky < 3; ++ky)
+        {
+            const int rowBase = anchor + ky * width;
+            accumulator += input[rowBase + 0] * taps[ky * 3 + 0];
+            accumulator += input[rowBase + 1] * taps[ky * 3 + 1];
+            accumulator += input[rowBase + 2] * taps[ky * 3 + 2];
+        }
 
-    /* [Filter first row] */
-    accumulator += data0 * FW_UL;
-    accumulator += data1 * FW_UM;
-    accumulator += data2 * FW_UR;
-    /* [Filter first row] */
-
-    /* [Load and filter second and third row] */
-    /* Access the second row in the 6x3 window and repeat the process, but with FW_C coefficients. */
-    data0 = vload4(0, input + offset + width);
-    data2 = vload4(0, input + offset + width + 2);
-    data1 = (float4)(data0.s12, data2.s12);
-
-    accumulator += data0 * FW_CL;
-    accumulator += data1 * FW_CM;
-    accumulator += data2 * FW_CR;
-
-    /* Access the third row in the 6x3 window and repeat the process, but with FW_B coefficients. */
-    data0 = vload4(0, input + offset + width * 2);
-    data2 = vload4(0, input + offset + width * 2 + 2);
-    data1 = (float4)(data0.s12, data2.s12);
-
-    accumulator += data0 * FW_BL;
-    accumulator += data1 * FW_BM;
-    accumulator += data2 * FW_BR;
-    /* [Load and filter second and third row] */
-
-    /* [Store] */
-    /* Store the accumulator. */
-    vstore4(accumulator, 0, output + offset);
-    /* [Store] */
+        output[anchor] = accumulator * FIR_INV_SCALE;
+    }
 }

@@ -1,3 +1,7 @@
+/*
+* Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+*/
+
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <EGL/egl.h>

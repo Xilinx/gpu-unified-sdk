@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # compute_particles - compute-shader particle system (OpenGL ES 3.1)
 file(GLOB COMPUTE_PARTICLES_SOURCES

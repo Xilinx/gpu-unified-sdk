@@ -1,5 +1,7 @@
 #version 310 es
 
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
 /*
  * The main idea of the sorting algorithm is based on counting.
  * For example, say that we need to put the number 3 in sorted order,

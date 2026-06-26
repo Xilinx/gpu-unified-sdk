@@ -1,57 +1,49 @@
-
-/* [Define a sampler] */
-const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_CLAMP | CLK_FILTER_LINEAR;
-/* [Define a sampler] */
-
-/**
- * \brief Image scaling kernel function.
- * \param[in] sourceImage Input image object.
- * \param[out] destinationImage Re-sized output image object.
- * \param[in] widthNormalizationFactor 1 / destinationImage width.
- * \param[in] heightNormalizationFactor 1 / destinationImage height.
+/*
+ * Copyright (C) 2024-2025 Advanced Micro Devices, Inc.  All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-__kernel void image_scaling(__read_only image2d_t sourceImage,
+
+/*
+ * Bilinear image rescale. One work-item writes one destination pixel: it maps
+ * the destination coordinate into normalised [0,1] source space and lets a
+ * linear-filtering sampler perform the interpolation.
+ */
+const sampler_t linearSampler = CLK_NORMALIZED_COORDS_TRUE |
+                                CLK_ADDRESS_CLAMP |
+                                CLK_FILTER_LINEAR;
+
+__kernel void image_scaling(__read_only  image2d_t sourceImage,
                             __write_only image2d_t destinationImage,
                             const float widthNormalizationFactor,
                             const float heightNormalizationFactor)
 {
-    /*
-     * It is possible to get the width and height of an image object (using get_image_width and get_image_height).
-     * You could use this to calculate the normalization factors in the kernel.
-     * In this case, because the width and height doesn't change for each kernel,
-     * it is better to pass normalization factors to the kernel as parameters.
-     * This way we do the calculations once on the host side instead of in every kernel.
-     */
+    const int2 destinationCoordinate = (int2)(get_global_id(0), get_global_id(1));
 
-    /* [Calculate the coordinates] */
-    /*
-     * There is one kernel instance per pixel in the destination image.
-     * The global id of this kernel instance is therefore a coordinate in the destination image.
-     */
-    int2 coordinate = (int2)(get_global_id(0), get_global_id(1));
+    const float2 sourceCoordinate =
+        (float2)(destinationCoordinate.x * widthNormalizationFactor,
+                 destinationCoordinate.y * heightNormalizationFactor);
 
-    /*
-     * That coordinate is only valid for the destination image.
-     * If we normalize the coordinates to the range [0.0, 1.0] (using the height and width of the destination image),
-     * we can use them as coordinates in the sourceImage.
-     */
-    float2 normalizedCoordinate = convert_float2(coordinate) * (float2)(widthNormalizationFactor, heightNormalizationFactor);
-    /* [Calculate the coordinates] */
+    const float4 sampledColour =
+        read_imagef(sourceImage, linearSampler, sourceCoordinate);
 
-    /* [Read from the source image] */
-    /*
-     * Read colours from the source image.
-     * The sampler determines how the coordinates are interpreted.
-     * Because bilinear filtering is enabled, the value of colour will be the average of the 4 pixels closest to the coordinate.
-     */
-    float4 colour = read_imagef(sourceImage, sampler, normalizedCoordinate);
-    /* [Read from the source image] */
-
-    /* [Write to the destination image] */
-    /*
-     * Write the colour to the destination image.
-     * No sampler is used here as all writes must specify an exact valid pixel coordinate.
-     */
-    write_imagef(destinationImage, coordinate, colour);
-    /* [Write to the destination image] */
+    write_imagef(destinationImage, destinationCoordinate, sampledColour);
 }

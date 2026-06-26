@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # OpenGL ES samples
 #
@@ -19,7 +22,7 @@ set(GLES_WINDOW_H "1080" CACHE STRING "OpenGL ES sample window height")
 set(GLES_FONT_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../lib/sdk/GlesFramework/FontShaders")
 
 # GLES version sub-selection. On ZynqMP (Mali 400) only the OpenGL ES 2.0
-# samples are built; on Versal2 (Mali G78AE) both 2.0 and 3.0 are built. The
+# samples are built; on Versal 2VE/2VM (Mali G78AE) both 2.0 and 3.0 are built. The
 # SDK_BUILD_OPENGLES_2_0 / _3_0 switches (top-level CMakeLists) control this and
 # can be overridden explicitly.
 if (SDK_BUILD_OPENGLES_2_0)

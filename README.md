@@ -36,7 +36,7 @@ applications and to explore implementation possibilities.
 |----------|-------------|-----|------|--------|
 | AMD Kria SOM | ARM64 | Mali 400 | OpenGL ES | ✅ Full Support (X11, FBDEV, Wayland)|
 | Zynq UltraScale+ | ARM64 | Mali 400 | OpenGL ES | ✅ Full Support (X11, FBDEV, Wayland)|
-| Versal ACAP | ARM64 | Mali G78AE | OpenGL ES / OpenCL / Vulkan | ✅ Full Support (FBDEV, Wayland)|
+| Versal AI Edge Series Gen 2 | ARM64 | Mali G78AE | OpenGL ES / OpenCL / Vulkan | ✅ Full Support (FBDEV, Wayland)|
 
 ---
 
@@ -81,7 +81,6 @@ applications and to explore implementation possibilities.
       - eglpreserve                  - EGL_BUFFER_PRESERVED swap behaviour
       - eglrenderingsample           - EGLImage rendering (standalone, FBDEV only)
       - framebufferobject-fbosample  - Render-to-texture via an FBO
-      - meshrendersample             - OBJ/3DS mesh loading and lighting (textured low-poly pickup)
       - multicubesample              - Multiple textured spinning cubes
       - particlerenderingsample      - GPU particle / molecule system
       - rotozoom                     - Rotation/zoom texture effect
@@ -146,7 +145,7 @@ most of the build time dependencies through the Google repo.
 Instructions below assume that path to the repo checkout is at `/path/to/src`.
 
 > **Important:** No sample sets are built by default. Add a platform preset
-> (e.g. `-D SDK_PLATFORM_TARGET=versal2`) or per-API switches
+> (e.g. `-D SDK_PLATFORM_TARGET=versal-2ve-2vm`) or per-API switches
 > (e.g. `-D SDK_BUILD_VULKAN=ON`) to your `cmake` command — see
 > [Selecting what to build](#selecting-what-to-build) below.
 
@@ -164,7 +163,7 @@ cmake \
     -D CMAKE_BUILD_TYPE=Release \
     -D CMAKE_TOOLCHAIN_FILE=sdk.cmake \
     -D SDK_Platform=wayland \
-    -D SDK_PLATFORM_TARGET=versal2 \
+    -D SDK_PLATFORM_TARGET=versal-2ve-2vm \
 ```
 
 `SDK_Platform` selects the OpenGL ES samples' windowing backend
@@ -185,12 +184,12 @@ capabilities:
 | `SDK_PLATFORM_TARGET` | GPU | Sample sets enabled |
 |-----------------------|-----|---------------------|
 | `none` (default) | — | nothing (use the per-API switches) |
-| `versal2` | Mali G78AE | OpenGL ES 2.0 + 3.0, OpenCL, Vulkan |
+| `versal-2ve-2vm` | Mali G78AE | OpenGL ES 2.0 + 3.0, OpenCL, Vulkan |
 | `zynqmp` | Mali 400 | OpenGL ES 2.0 only |
 
 ```bash
-# Build everything (Versal2 / Mali G78AE)
-cmake -G Ninja -D SDK_PLATFORM_TARGET=versal2 /path/to/sdk
+# Build everything (Versal AI Edge Series Gen 2 / Mali G78AE)
+cmake -G Ninja -D SDK_PLATFORM_TARGET=versal-2ve-2vm /path/to/sdk
 
 # Build only the ZynqMP (Mali 400) examples -> OpenGL ES 2.0 only
 cmake -G Ninja -D SDK_PLATFORM_TARGET=zynqmp /path/to/sdk
@@ -424,33 +423,7 @@ sampling with rotation and zoom.
 
 ---
 
-#### 10. **Mesh Rendering Sample**
-![Mesh Sample](doc_imgs/mesh.png)
-<!-- Screenshot pending: capture a render of the bundled CC0 car (models/car.obj) and save it as doc_imgs/mesh.png -->
-
-**📁 Source**: `samples/opengles/opengl_es_2.0/meshrendersample/`
-
-**Supported Window Environments:** ✅ FBDEV  ✅ X11  ✅ Wayland
-
-**Description:** Demonstrates 3D object/mesh rendering for `.obj`/`.3ds` files:
-loading and rendering complex, textured 3D geometry with lighting.
-
-**Key Techniques:** 3D model loading, complex geometry, material systems, .obj file parsing
-
-**Bundled model:** A higher-detail CC0 (public domain) Quaternius "Pickup
-Truck" (~6,964 vertices) is included and loaded by default (`models/car.obj`
-with its palette-atlas texture `models/car_texture.png`), rendered with its
-texture applied. The model ships only as glTF/GLB, so it was converted to OBJ
-(positions, normals, UVs) and its embedded palette atlas extracted to
-`car_texture.png`. To render your own model, drop a supported `.obj` or `.3ds`
-file into the sample's `models/` directory; model selection is driven by the
-files present. If your model is UV-mapped, place its diffuse texture at
-`models/car_texture.png` to have it textured (PNG/JPG are decoded via the
-bundled public-domain `stb_image` loader); otherwise it renders untextured.
-
----
-
-#### 11. **YUV2RGB Conversion Sample**
+#### 10. **YUV2RGB Conversion Sample**
 ![YUV2RGB Sample](doc_imgs/Yuv2rgb.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/yuv2rgbsample/`
@@ -466,7 +439,7 @@ fly, rendering the converted image to the framebuffer frame by frame.
 
 ---
 
-#### 12. **EGL Image Texture Swapping Sample**
+#### 11. **EGL Image Texture Swapping Sample**
 ![EGL Sample](doc_imgs/EGL1.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/eglrenderingsample/`
@@ -480,7 +453,7 @@ type (EGLImage) suitable for sharing 2D arrays of image data between client APIs
 
 ---
 
-#### 13. **EGL Preserve Sample**
+#### 12. **EGL Preserve Sample**
 ![EGL Preserve Sample](doc_imgs/EGL_preserve.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/eglpreserve/`
@@ -494,7 +467,7 @@ and context management for efficient rendering and resource management.
 
 ---
 
-#### 14. **BBOX Sample**
+#### 13. **BBOX Sample**
 ![BBOX Sample](doc_imgs/bbox.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/bbox/`

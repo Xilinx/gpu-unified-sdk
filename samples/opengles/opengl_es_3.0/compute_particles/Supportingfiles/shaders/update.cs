@@ -1,5 +1,7 @@
 #version 310 es
 
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
 layout (local_size_x = 8) in;
 layout (std140, binding = 0) buffer SpawnBuffer {
     vec4 SpawnInfo[];

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+
 
 # OpenGL ES 2.0 samples.
 add_subdirectory(trianglesample)
@@ -6,7 +9,6 @@ add_subdirectory(bbox)
 add_subdirectory(eglpreserve)
 add_subdirectory(eglrenderingsample)
 add_subdirectory(framebufferobject-fbosample)
-add_subdirectory(meshrendersample)
 add_subdirectory(multicubesample)
 add_subdirectory(particlerenderingsample)
 add_subdirectory(rotozoom)

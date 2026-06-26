@@ -53,24 +53,23 @@ var NAVTREE =
           [ "7. <strong>Shadow Mapping Sample</strong>", "index.html#autotoc_md29", null ],
           [ "8. <strong>Waveform Pattern Sample</strong>", "index.html#autotoc_md31", null ],
           [ "9. <strong>RotoZoom Sample</strong>", "index.html#autotoc_md33", null ],
-          [ "10. <strong>Mesh Rendering Sample</strong>", "index.html#autotoc_md35", null ],
-          [ "11. <strong>YUV2RGB Conversion Sample</strong>", "index.html#autotoc_md37", null ],
-          [ "12. <strong>EGL Image Texture Swapping Sample</strong>", "index.html#autotoc_md39", null ],
-          [ "13. <strong>EGL Preserve Sample</strong>", "index.html#autotoc_md41", null ],
-          [ "14. <strong>BBOX Sample</strong>", "index.html#autotoc_md43", null ]
+          [ "10. <strong>YUV2RGB Conversion Sample</strong>", "index.html#autotoc_md35", null ],
+          [ "11. <strong>EGL Image Texture Swapping Sample</strong>", "index.html#autotoc_md37", null ],
+          [ "12. <strong>EGL Preserve Sample</strong>", "index.html#autotoc_md39", null ],
+          [ "13. <strong>BBOX Sample</strong>", "index.html#autotoc_md41", null ]
         ] ],
-        [ "<strong>OpenGL ES 3.0 Samples</strong>", "index.html#autotoc_md45", [
-          [ "1. <strong>Compute Particles Sample</strong>", "index.html#autotoc_md46", null ],
-          [ "2. <strong>Occlusion Culling Sample</strong>", "index.html#autotoc_md48", null ],
-          [ "3. <strong>OpenCL Matrix Multiplication Sample</strong>", "index.html#autotoc_md50", null ]
+        [ "<strong>OpenGL ES 3.0 Samples</strong>", "index.html#autotoc_md43", [
+          [ "1. <strong>Compute Particles Sample</strong>", "index.html#autotoc_md44", null ],
+          [ "2. <strong>Occlusion Culling Sample</strong>", "index.html#autotoc_md46", null ],
+          [ "3. <strong>OpenCL Matrix Multiplication Sample</strong>", "index.html#autotoc_md48", null ]
         ] ]
       ] ],
-      [ "OpenCL Samples", "index.html#autotoc_md52", null ],
-      [ "Vulkan Samples", "index.html#autotoc_md89", null ]
+      [ "OpenCL Samples", "index.html#autotoc_md50", null ],
+      [ "Vulkan Samples", "index.html#autotoc_md87", null ]
     ] ],
-    [ "🏗️ Framework Architecture", "index.html#autotoc_md108", null ],
-    [ "🔧 Adding New Samples", "index.html#autotoc_md109", null ],
-    [ "📄 License", "index.html#autotoc_md110", null ]
+    [ "🏗️ Framework Architecture", "index.html#autotoc_md106", null ],
+    [ "🔧 Adding New Samples", "index.html#autotoc_md107", null ],
+    [ "📄 License", "index.html#autotoc_md108", null ]
   ] ]
 ];
 

@@ -1,4 +1,6 @@
 #extension GL_ARM_shader_framebuffer_fetch_depth_stencil : require
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
 precision mediump float;
 
 uniform float near;
