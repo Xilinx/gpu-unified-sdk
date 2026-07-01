@@ -75,6 +75,11 @@ ARTIFACT_FILES=(
 	"compile_commands.json"
 	"Makefile.cmake"
 	"install_manifest.txt"
+	# Generated sample outputs (written to the run/working dir).
+	"output.bmp"
+	"output.png"
+	"output-dX.bmp"
+	"output-dY.bmp"
 )
 #  - Files removed by glob (object files, archives, generated wayland protocol).
 #    NOTE: deliberately NOT matching "*.obj" - that is a 3D model asset format
@@ -93,6 +98,13 @@ ARTIFACT_GLOBS=(
 removed_count=0
 
 note() { [ "$QUIET" -eq 1 ] || echo "$@"; }
+
+# Return success if $1 is an ELF file (first 4 bytes are 0x7f 'E' 'L' 'F').
+is_elf() {
+	local magic
+	magic="$(head -c 4 -- "$1" 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')"
+	[ "$magic" = "7f454c46" ]
+}
 
 remove_path() {
 	local p="$1"
@@ -132,6 +144,17 @@ clean_dir() {
 			remove_path "$p"
 		done < <(find "$root" -type f -name "$glob" -print0 2>/dev/null)
 	done
+
+	# Compiled sample executables. These are extensionless ELF binaries (e.g.
+	# gaussian_filter, trianglesample), so we cannot match them by name/glob
+	# without risking source or asset files. Instead, only remove regular files
+	# that are BOTH executable AND begin with the ELF magic (0x7f 'E' 'L' 'F').
+	# Source, shaders, assets and text files are never ELF, so they are safe.
+	while IFS= read -r -d '' p; do
+		if is_elf "$p"; then
+			remove_path "$p"
+		fi
+	done < <(find "$root" -type f -perm -u+x -print0 2>/dev/null)
 }
 
 for t in "${TARGETS[@]}"; do

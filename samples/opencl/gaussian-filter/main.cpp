@@ -23,13 +23,14 @@
  */
 
 
+#include <cstdint>
+#include <vector>
+
 #include <Common/Color.hpp>
-#include <Common/Geometry.hpp>
-#include <Common/PngUtils.hpp>
 #include <OpenCL/CLUtils.hpp>
 
 
-int main(int argc, char ** argv)
+int main(void)
 {
 	const ocl::Context context = ocl::Context::create();
 	const cl_device_id device = context.findDevice();
@@ -37,10 +38,16 @@ int main(int argc, char ** argv)
 	const ocl::Program program = context.createProgram(device, "assets/gaussian_filter.cl");
 	const ocl::Kernel kernel = program.createKernel("gaussian");
 
-	const Image image = ::loadPng("assets/input.png",
-			PngLoadParams{.colorType = PngColorType::Rgb});
+	/*
+	 * Load the input as a tightly packed 24-bit RGB bitmap (3 bytes/pixel), matching
+	 * what RGBToLuminance expects. The kernel processes 16 pixels per work-item, so the
+	 * image width must be a multiple of 16.
+	 */
+	int width = 0, height = 0;
+	unsigned char * inputImageData = nullptr;
+	loadFromBitmap("assets/input.bmp", &width, &height, &inputImageData);
 
-	const int bufferSize = image.size.width * image.size.height * sizeof(cl_uchar);
+	const int64_t bufferSize = static_cast<int64_t>(width) * height * sizeof(cl_uchar);
 	const ocl::Mem readMem = context.createBuffer(CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR,
 			bufferSize);
 	const ocl::Mem writeMem = context.createBuffer(CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR,
@@ -49,17 +56,17 @@ int main(int argc, char ** argv)
 	{
 		ocl::EnqueueBufferRet<cl_uchar> luminance = commandQueue.enqueueMapBuffer<cl_uchar>(
 				readMem, true, CL_MAP_WRITE, 0, bufferSize, false);
-		RGBToLuminance(image.data.get(), luminance.memory.data(),
-				image.size.width, image.size.height);
+		RGBToLuminance(inputImageData, luminance.memory.data(), width, height);
 	}
+	delete[] inputImageData;
 
 	kernel.setArg<cl_mem>(0, readMem);
-	kernel.setArg<cl_int>(1, image.size.width);
+	kernel.setArg<cl_int>(1, width);
 	kernel.setArg<cl_mem>(2, writeMem);
 
 	const size_t globalWorkSize[2] = {
-		static_cast<size_t>(image.size.width / 16),
-		static_cast<size_t>(image.size.height / 1),
+		static_cast<size_t>(width / 16),
+		static_cast<size_t>(height / 1),
 	};
 
 	ocl::Event event = 	commandQueue.enqueueNDRangeKernel(kernel, 2,
@@ -75,10 +82,9 @@ int main(int argc, char ** argv)
 	{
 		ocl::EnqueueBufferRet<cl_uchar> output = commandQueue.enqueueMapBuffer<cl_uchar>(
 				writeMem, true, CL_MAP_READ, 0, bufferSize, false);
-		Image outputImage = Image::create(PixelFormat::RGB888, image.size);
-		luminanceToRGB(output.memory.data(), outputImage.data.get(),
-				image.size.width, image.size.height);
-		dumpPng("output.png", outputImage, PngDumpParams{.colorType = PngColorType::Rgb});
+		std::vector<unsigned char> rgbOut(width * height * 3);
+		luminanceToRGB(output.memory.data(), rgbOut.data(), width, height);
+		saveToBitmap("output.bmp", width, height, rgbOut.data());
 	}
 
 	return 0;

@@ -188,11 +188,12 @@ capabilities:
 | `zynqmp` | Mali 400 | OpenGL ES 2.0 only |
 
 ```bash
-# Build everything (Versal AI Edge Series Gen 2 / Mali G78AE)
-cmake -G Ninja -D SDK_PLATFORM_TARGET=versal-2ve-2vm /path/to/sdk
+# Build everything (Versal AI Edge Series Gen 2 / Mali G78AE) examples
+AMD_SDK=/path/to/yocto_sdk cmake -G Ninja -D SDK_PLATFORM_TARGET=versal-2ve-2vm -D ...
 
-# Build only the ZynqMP (Mali 400) examples -> OpenGL ES 2.0 only
-cmake -G Ninja -D SDK_PLATFORM_TARGET=zynqmp /path/to/sdk
+# Build only the (ZynqMP / Mali 400) examples -> OpenGL ES 2.0 only
+AMD_SDK=/path/to/yocto_sdk cmake -G Ninja -D SDK_PLATFORM_TARGET=zynqmp -D ...
+
 ```
 
 ### Per-API switches
@@ -215,17 +216,17 @@ platform preset, so any combination can be built:
 # Build only the OpenCL samples
 cmake -G Ninja \
     -D SDK_BUILD_OPENGLES=OFF -D SDK_BUILD_OPENCL=ON -D SDK_BUILD_VULKAN=OFF \
-    /path/to/sdk
+    /path/to/sdk -D ...
 
 # Build only the Vulkan samples
 cmake -G Ninja \
     -D SDK_BUILD_OPENGLES=OFF -D SDK_BUILD_OPENCL=OFF -D SDK_BUILD_VULKAN=ON \
-    /path/to/sdk
+    /path/to/sdk -D ...
 
 # Build only the OpenGL ES samples (both versions)
 cmake -G Ninja \
     -D SDK_BUILD_OPENGLES=ON -D SDK_BUILD_OPENCL=OFF -D SDK_BUILD_VULKAN=OFF \
-    /path/to/sdk
+    /path/to/sdk -D ...
 ```
 
 Only the support libraries for the enabled sample sets are built, so a subset
@@ -273,9 +274,10 @@ Sample-specific inputs and arguments:
   `assets/input.bmp`.
 - `depth-map` expects a stereo pair `assets/left.bmp` and `assets/right.bmp`.
 - `sobel-filter` expects an `assets/input.bmp` whose width is a multiple of 16.
-- `gaussian-filter` reads `assets/input.png`; all other image samples read
-  `assets/input.bmp`.
-- `integer-64-bit` requires the `cl_khr_int64_base_atomics` device extension.
+- Image samples read `assets/input.bmp`.
+- `integer-64-bit` reads `assets/input.bmp`, prints the pixel sum and
+  sum-of-squares to the console (no output file), and requires the
+  `cl_khr_int64_base_atomics` device extension.
 - `hello-world-c`, `hello-world-opencl`, `vector-hello-world`, `opencl-template`
   and `sgemm` take no inputs and produce no image output.
 
@@ -284,16 +286,16 @@ Sample-specific inputs and arguments:
 
 # 🎨 Complete Sample Reference
 
-> **Note on images:** The snapshots below reference artwork under `doc_imgs/`
-> (OpenGL ES) and `doxygen/images/` (OpenCL and Vulkan). Drop the corresponding
-> image files into those folders to have them render here.
+> **Note on images:** The snapshots below reference artwork under
+> `doc_imgs/opengles/`, `doc_imgs/opencl/`, and `doc_imgs/vulkan/`. Drop the
+> corresponding image files into the matching folder to have them render here.
 
 ## OpenGL ES Samples
 
 ### **OpenGL ES 2.0 Samples**
 
 #### 1. **Triangle Sample**
-![Triangle Sample](doc_imgs/TriangleSample.png)
+![Triangle Sample](doc_imgs/opengles/TriangleSample.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/trianglesample/`
 
@@ -308,7 +310,7 @@ perfect starting point for learning OpenGL ES fundamentals.
 ---
 
 #### 2. **MultiCube Sample**
-![MultiCube Sample](doc_imgs/cube.png)
+![MultiCube Sample](doc_imgs/opengles/cube.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/multicubesample/`
 
@@ -323,7 +325,7 @@ understanding 3D transformations.
 ---
 
 #### 3. **Texture MipMap Sample**
-![MipMap Sample](doc_imgs/mipmap.png)
+![MipMap Sample](doc_imgs/opengles/mipmap.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/texturemipmapsample/`
 
@@ -337,7 +339,7 @@ with multiple MIPMAP levels used as textures (stored as compressed ETC files).
 ---
 
 #### 4. **Alpha Depth Sample**
-![Alpha Sample](doc_imgs/alpha.png)
+![Alpha Sample](doc_imgs/opengles/alpha.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/alpha_depthsample/`
 
@@ -351,7 +353,7 @@ with proper alpha blending and depth testing.
 ---
 
 #### 5. **Frame Buffer Object (FBO) Sample**
-![FBO Sample](doc_imgs/FBO.png)
+![FBO Sample](doc_imgs/opengles/FBO.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/framebufferobject-fbosample/`
 
@@ -366,7 +368,7 @@ cubes animated by rotation matrices.
 ---
 
 #### 6. **Particle Rendering Sample**
-![Particle Sample](doc_imgs/particle.png)
+![Particle Sample](doc_imgs/opengles/particle.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/particlerenderingsample/`
 
@@ -381,7 +383,7 @@ matrices.
 ---
 
 #### 7. **Shadow Mapping Sample**
-![Shadow Sample](doc_imgs/ShadowSample.png)
+![Shadow Sample](doc_imgs/opengles/ShadowSample.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/shadowsample/`
 
@@ -395,7 +397,7 @@ real-time shadow rendering techniques.
 ---
 
 #### 8. **Waveform Pattern Sample**
-![Wave Sample](doc_imgs/wave.png)
+![Wave Sample](doc_imgs/opengles/wave.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/waveformsample/`
 
@@ -410,7 +412,7 @@ shader.
 ---
 
 #### 9. **RotoZoom Sample**
-![RotoZoom Sample](doc_imgs/roto.png)
+![RotoZoom Sample](doc_imgs/opengles/roto.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/rotozoom/`
 
@@ -424,7 +426,7 @@ sampling with rotation and zoom.
 ---
 
 #### 10. **YUV2RGB Conversion Sample**
-![YUV2RGB Sample](doc_imgs/Yuv2rgb.png)
+![YUV2RGB Sample](doc_imgs/opengles/Yuv2rgb.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/yuv2rgbsample/`
 
@@ -440,7 +442,7 @@ fly, rendering the converted image to the framebuffer frame by frame.
 ---
 
 #### 11. **EGL Image Texture Swapping Sample**
-![EGL Sample](doc_imgs/EGL1.png)
+![EGL Sample](doc_imgs/opengles/EGL1.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/eglrenderingsample/`
 
@@ -454,7 +456,7 @@ type (EGLImage) suitable for sharing 2D arrays of image data between client APIs
 ---
 
 #### 12. **EGL Preserve Sample**
-![EGL Preserve Sample](doc_imgs/EGL_preserve.png)
+![EGL Preserve Sample](doc_imgs/opengles/EGL_preserve.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/eglpreserve/`
 
@@ -468,7 +470,7 @@ and context management for efficient rendering and resource management.
 ---
 
 #### 13. **BBOX Sample**
-![BBOX Sample](doc_imgs/bbox.png)
+![BBOX Sample](doc_imgs/opengles/bbox.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/bbox/`
 
@@ -484,7 +486,7 @@ coordinates and class label from a text file in the same directory.
 ### **OpenGL ES 3.0 Samples**
 
 #### 1. **Compute Particles Sample**
-![Compute Particles Sample](doc_imgs/compute_particles.png)
+![Compute Particles Sample](doc_imgs/opengles/compute_particles.png)
 
 **📁 Source**: `samples/opengles/opengl_es_3.0/compute_particles/`
 
@@ -498,7 +500,7 @@ compute capabilities for high-performance particle simulation.
 ---
 
 #### 2. **Occlusion Culling Sample**
-![Occlusion Culling Sample](doc_imgs/occlusion_culling.png)
+![Occlusion Culling Sample](doc_imgs/opengles/occlusion_culling.png)
 
 **📁 Source**: `samples/opengles/opengl_es_3.0/occlusion_culling/`
 
@@ -526,11 +528,12 @@ found).
 ## OpenCL Samples
 
 #### 1. **Hello World OpenCL**
-![Hello World Sample](doxygen/images/hello_world_output.png)
 
 **📁 Source**: `samples/opencl/hello-world-opencl/`
 
-**Description:** Basic integer array addition implemented in an OpenCL kernel.
+**Description:** Basic integer array addition implemented in an OpenCL kernel. Produces
+no image or result file; it only prints kernel profiling information on completion,
+confirming that an OpenCL device is available and the kernel ran.
 
 **Key Techniques:** OpenCL initialization, kernel creation, buffer management, basic parallel computation
 
@@ -540,16 +543,16 @@ found).
 
 **📁 Source**: `samples/opencl/hello-world-c/`
 
-**Description:** Simplified C-style OpenCL sample demonstrating basic concepts
-without C++ abstractions. No output — if it runs successfully, your machine can
-run OpenCL.
+**Description:** CPU-only baseline that performs the same integer array addition in
+plain C/C++ (no OpenCL). It prints nothing and writes no file — if it runs and exits
+successfully, your C/C++ toolchain works.
 
 **Key Techniques:** C-style OpenCL API usage, context creation, simple kernel execution
 
 ---
 
 #### 3. **Mandelbrot Set**
-![Mandelbrot Sample](doxygen/images/Mandelbrot.png)
+![Mandelbrot Sample](doc_imgs/opencl/Mandelbrot.bmp)
 
 **📁 Source**: `samples/opencl/mandelbrot/`
 
@@ -562,7 +565,7 @@ bitmap (`output.bmp`).
 ---
 
 #### 4. **Mandelbrot Benchmark**
-![Mandelbrot Benchmark Sample](doxygen/images/Mandelbrot_benchmark.png)
+![Mandelbrot Benchmark Sample](doc_imgs/opencl/Mandelbrot_bench.bmp)
 
 **📁 Source**: `samples/opencl/mandelbrot-benchmark/`
 
@@ -574,7 +577,7 @@ perturbation for benchmarking GPU compute. Expects a 1024x1024 `assets/input.bmp
 ---
 
 #### 5. **Image Scaling**
-![Image Scaling Sample](doxygen/images/ImageScaling.png)
+![Image Scaling Sample](doc_imgs/opencl/Imagescaling.bmp)
 
 **📁 Source**: `samples/opencl/image-scaling/`
 
@@ -586,7 +589,7 @@ GPU.
 ---
 
 #### 6. **Sobel Filter**
-![Sobel Filter Sample](doxygen/images/SobelFilter.png)
+![Sobel Filter Sample](doc_imgs/opencl/Sobel_filter.bmp)
 
 **📁 Source**: `samples/opencl/sobel-filter/`
 
@@ -599,7 +602,7 @@ whose width is a multiple of 16.
 ---
 
 #### 7. **Sobel Filter (No Vectors)**
-![Sobel No Vectors Sample](doxygen/images/SobelFilter.png)
+![Sobel No Vectors Sample](doc_imgs/opencl/Sobel_filter_no_vec.bmp)
 
 **📁 Source**: `samples/opencl/sobel-filter-no-vectors/`
 
@@ -611,7 +614,7 @@ item — demonstrating an alternative optimization approach.
 ---
 
 #### 8. **Gaussian Filter**
-![Gaussian Filter Sample](doxygen/images/GaussianFilter.png)
+![Gaussian Filter Sample](doc_imgs/opencl/Gaussianfilter.png)
 
 **📁 Source**: `samples/opencl/gaussian-filter/`
 
@@ -623,7 +626,7 @@ noise reduction and smoothing.
 ---
 
 #### 9. **Convolution Filter**
-![Convolution Filter Sample](doxygen/images/ConvolutionFilter.png)
+![Convolution Filter Sample](doc_imgs/opencl/Convolutionfilter.bmp)
 
 **📁 Source**: `samples/opencl/convolution-filter/`
 
@@ -635,7 +638,7 @@ supporting various kernel types.
 ---
 
 #### 10. **FIR Filter**
-![FIR Filter Sample](doxygen/images/FirFilter.png)
+![FIR Filter Sample](doc_imgs/opencl/Firfilter.bmp)
 
 **📁 Source**: `samples/opencl/fir-filter/`
 
@@ -647,7 +650,7 @@ processing on the GPU.
 ---
 
 #### 11. **Depth Map**
-![Depth Map Sample](doxygen/images/DepthMap.png)
+![Depth Map Sample](doc_imgs/opencl/Depthmap.bmp)
 
 **📁 Source**: `samples/opencl/depth-map/`
 
@@ -659,7 +662,7 @@ Expects a stereo pair `assets/left.bmp` and `assets/right.bmp`.
 ---
 
 #### 12. **ML Classifier**
-![ML Classifier Sample](doxygen/images/MLClassifier.png)
+![ML Classifier Sample](doc_imgs/opencl/ML_classifier.bmp)
 
 **📁 Source**: `samples/opencl/ml-classifier/`
 
@@ -686,8 +689,10 @@ options including `-va` (validate vs. CPU) and `-csv <file>`.
 
 **📁 Source**: `samples/opencl/integer-64-bit/`
 
-**Description:** Pixel sum / sum-of-squares using 64-bit integers and atomics.
-Requires the `cl_khr_int64_base_atomics` device extension.
+**Description:** Computes the sum and the sum-of-squares of an image's pixel
+(luminance) values using 64-bit integers and atomics, then prints both totals to
+the console (no image or result file is written). Reads `assets/input.bmp` and
+requires the `cl_khr_int64_base_atomics` device extension.
 
 **Key Techniques:** 64-bit arithmetic, extended precision, atomics
 
@@ -727,6 +732,7 @@ applications with standard setup and error handling.
 ---
 
 #### 18. **ADAS Lane Detection**
+![ADAS Lane Detection Sample](doc_imgs/opencl/Adas.bmp)
 
 **📁 Source**: `samples/opencl/adas-lane-detection/`
 
@@ -740,7 +746,7 @@ Expects a 1024x1024 `assets/input.bmp`.
 ## Vulkan Samples
 
 #### 1. **Triangle**
-![Hello Triangle Sample](doxygen/images/hello_triangle.png)
+![Hello Triangle Sample](doc_imgs/vulkan/hello_triangle.png)
 
 **📁 Source**: `samples/vulkan/triangle/`
 
@@ -754,7 +760,7 @@ Demonstrates swapchain setup, render passes, and the basic graphics pipeline.
 ---
 
 #### 2. **Texture (Rotating)**
-![Rotating Texture Sample](doxygen/images/rotating_texture.gif)
+![Rotating Texture Sample](doc_imgs/vulkan/rotating_texture.gif)
 
 **📁 Source**: `samples/vulkan/texture/`
 
@@ -768,7 +774,7 @@ texture loading, samplers, and uniform buffer updates.
 ---
 
 #### 3. **Basic Compute**
-![Compute Sample](doxygen/images/basic_compute.gif)
+![Compute Sample](doc_imgs/vulkan/basic_compute.gif)
 
 **📁 Source**: `samples/vulkan/basic-compute/`
 
@@ -782,7 +788,7 @@ demonstrating compute-to-graphics synchronization and storage buffers.
 ---
 
 #### 4. **Multithreading**
-![Multithreading Sample](doxygen/images/multithreading.gif)
+![Multithreading Sample](doc_imgs/vulkan/multithreading.gif)
 
 **📁 Source**: `samples/vulkan/multithreading/`
 
@@ -796,7 +802,7 @@ for improved CPU-side performance.
 ---
 
 #### 5. **Multisampling**
-![Multisampling Sample](doxygen/images/multisampling.gif)
+![Multisampling Sample](doc_imgs/vulkan/multisampling.gif)
 
 **📁 Source**: `samples/vulkan/multisampling/`
 
@@ -810,7 +816,7 @@ rendering.
 ---
 
 #### 6. **Spinning Cube**
-![Spinning Cube Sample](doxygen/images/spinning_cube.gif)
+![Spinning Cube Sample](doc_imgs/vulkan/spinning_cube.gif)
 
 **📁 Source**: `samples/vulkan/spinning-cube/`
 
@@ -824,7 +830,7 @@ buffering.
 ---
 
 #### 7. **Multi-pass Rendering**
-![Multi-pass Sample](doxygen/images/multipass.gif)
+![Multi-pass Sample](doc_imgs/vulkan/multipass.gif)
 
 **📁 Source**: `samples/vulkan/multipass/`
 
@@ -838,7 +844,7 @@ useful for post-processing and advanced rendering effects.
 ---
 
 #### 8. **ASTC Texture Compression**
-![ASTC Sample](doxygen/images/astc.gif)
+![ASTC Sample](doc_imgs/vulkan/astc.gif)
 
 **📁 Source**: `samples/vulkan/astc/`
 
@@ -852,7 +858,7 @@ PNG if ASTC is not supported.
 ---
 
 #### 9. **Mipmapping**
-![Mipmapping Sample](doxygen/images/mipmapping_manually_generated.gif)
+![Mipmapping Sample](doc_imgs/vulkan/mipmapping_manually_generated.gif)
 
 **📁 Source**: `samples/vulkan/mipmapping/`
 
