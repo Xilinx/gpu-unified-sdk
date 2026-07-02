@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 
 # yuv2rgbsample - YUV-to-RGB colour conversion on GPU (OpenGL ES 2.0)

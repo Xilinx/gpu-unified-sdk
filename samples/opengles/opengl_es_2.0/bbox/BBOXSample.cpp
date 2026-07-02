@@ -1,5 +1,6 @@
 /*
-* Copyright (C) <2026> Advanced Micro Devices, Inc. All rights reserved.
+* SPDX-License-Identifier: BSD-3-Clause
+* Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
 */
 
 #include <GLES2/gl2.h>

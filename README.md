@@ -152,12 +152,12 @@ Instructions below assume that path to the repo checkout is at `/path/to/src`.
 ## Target configuration
 
 Target build requires installed Yocto SDK with populated target sysroot.
-Assuming Yocto SDK ins installed at `/path/to/yocto_sdk`.
+Assuming Yocto SDK ins installed at `/yocto/build/tmp/deploy/sdk/`.
 
 ```bash
 source /yocto/build/tmp/deploy/sdk/environment-setup-cortexa72-cortexa53-amd-linux
 
-AMD_SDK=/path/to/yocto_sdk \
+AMD_SDK=/yocto/build/tmp/deploy/sdk/ \
 cmake \
     -G Ninja \
     -D CMAKE_BUILD_TYPE=Release \
@@ -193,6 +193,8 @@ AMD_SDK=/path/to/yocto_sdk cmake -G Ninja -D SDK_PLATFORM_TARGET=versal-2ve-2vm 
 
 # Build only the (ZynqMP / Mali 400) examples -> OpenGL ES 2.0 only
 AMD_SDK=/path/to/yocto_sdk cmake -G Ninja -D SDK_PLATFORM_TARGET=zynqmp -D ...
+
+Application and supporting files will be generated inside run folder in each sample application folder.
 
 ```
 
@@ -437,7 +439,9 @@ fly, rendering the converted image to the framebuffer frame by frame.
 
 **Key Techniques:** Color space conversion, video textures, GPU-based color conversion
 
-**Note:** *USER MUST PROVIDE THEIR OWN YUV IMAGE FILE. Sample yuv file is in Supportingfiles/out.yuv*
+**Note:** *You must provide your own raw YUV (yuv420p) frame and pass it as the
+first argument (e.g. `./yuv2rgbsample input.yuv`). Run the sample with `-h` for
+usage details, including an `ffmpeg` command to generate a compatible file.*
 
 ---
 

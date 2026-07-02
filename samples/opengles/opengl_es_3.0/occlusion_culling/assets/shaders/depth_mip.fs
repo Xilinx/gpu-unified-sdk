@@ -18,7 +18,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * Modifications Copyright (C) 2024-2025 Advanced Micro Devices, Inc.  All rights reserved.
+ * Modifications Copyright (C) 2024-2026 Advanced Micro Devices, Inc.  All rights reserved.
  */
 
 // Compute next miplevel for Hi-Z depth map.

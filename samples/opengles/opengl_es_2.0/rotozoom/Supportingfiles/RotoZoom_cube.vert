@@ -1,3 +1,4 @@
+#version 100
 /* Copyright (c) 2012-2017, ARM Limited and Contributors
  *
  * SPDX-License-Identifier: MIT
@@ -17,10 +18,9 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * Modifications Copyright (C) 2024-2025 Advanced Micro Devices, Inc.  All rights reserved.
+ * Modifications Copyright (C) 2024-2026 Advanced Micro Devices, Inc.  All rights reserved.
  */
 
-#version 100
 
 attribute vec4 a_v4Position;
 attribute vec2 a_v2TexCoord;

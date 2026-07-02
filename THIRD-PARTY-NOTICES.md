@@ -3,7 +3,7 @@
 The gpu-unified-sdk includes, or is derived from, third-party software. AMD's own
 contributions are released under the BSD-3-Clause license in the root `LICENSE`
 file. The third-party components below retain their original licenses; where AMD
-has modified third-party files, a `Modifications Copyright (C) 2024-2025 Advanced
+has modified third-party files, a `Modifications Copyright (C) 2024-2026 Advanced
 Micro Devices, Inc.` line has been added beneath the original notice and the
 original copyright and permission notices have been preserved in full.
 
@@ -48,10 +48,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## 2. ARM Mali OpenGL ES SDK for Android  (MIT)
 
-**Used by:** the OpenGL ES samples `compute_particles`, `occlusion_culling`, and
-`rotozoom` under `samples/opengles/` (source and GLSL shaders). These are derived
-from ARM's Mali OpenGL ES SDK for Android. Per-file years follow upstream
-(`rotozoom` = 2012-2017; `compute_particles` and `occlusion_culling` = 2014-2017).
+**Used by:** the OpenGL ES samples `compute_particles`, `occlusion_culling`,
+`rotozoom`, and `eglpreserve` under `samples/opengles/` (source and GLSL shaders).
+These are derived from ARM's Mali OpenGL ES SDK for Android (each is an ARM
+`advanced_samples` entry, verified against ARM's published upstream). Per-file
+years follow upstream (`rotozoom` and `eglpreserve` = 2012-2017;
+`compute_particles` and `occlusion_culling` = 2014-2017).
 
 **Origin:** ARM `opengl-es-sdk-for-android` (github.com/ARM-software/opengl-es-sdk-for-android)
 **License:** MIT — `Copyright (c) 2012-2017, ARM Limited and Contributors`
@@ -59,20 +61,29 @@ from ARM's Mali OpenGL ES SDK for Android. Per-file years follow upstream
 
 ---
 
-## 3. ARM Mali OpenGL ES SDK for Linux  (MIT) — headered
+## 3. ARM Mali font engine  (MIT) — headered
 
 **Used by:** `lib/sdk/GlesFramework/FontEngine.*` and its shared font shaders
-(`font.frag`/`font.vert`, reused byte-identically by `bbox` and `eglpreserve`),
-and the `shadowsample` sample (`samples/opengles/opengl_es_2.0/shadowsample/*`,
-classes `MRendererProgram`, `MVector4`, `3d`, plus its 8 GLSL shaders). These
-derive from ARM's Mali **OpenGL ES SDK for Linux**, confirmed by the ARM
-`M`-prefixed class family. The ARM MIT notice + AMD modifications line has been
-applied to all 21 of these files. The notice text is ARM's standard MIT (identical
-to Sections 1-2); the year `2014-2017` is matched to the Android ARM SDK group
-(Section 2) rather than re-cloning this SDK separately.
+(`font.frag`/`font.vert`, reused byte-identically by `bbox` and `eglpreserve`).
+The ARM MIT notice + AMD modifications line has been applied to all **8** of these
+files. The notice text is ARM's standard MIT (identical to Sections 1-2); the year
+`2014-2017` is matched to the Android ARM SDK group (Section 2).
 
-**Origin:** ARM Mali OpenGL ES SDK for Linux/Embedded
+**Origin:** ARM Mali OpenGL ES SDK (shared font engine)
 **License:** MIT — `Copyright (c) 2014-2017, ARM Limited and Contributors`
+
+> **Note (2026-07-02):** the `shadowsample` sample
+> (`samples/opengles/opengl_es_2.0/shadowsample/*`) was **previously listed here**
+> as ARM-derived. On review this was **incorrect**: the sample's `M`-prefixed class
+> family (`MRendererProgram`, `MDRRenderer`, `MGeometryTorus`, `ShadowMap`, etc.)
+> is **AMD-authored** (`namespace SDKXilinx`; upstream headers were
+> `Copyright (c) _2024, Advanced Micro Devices`), and no such framework exists in
+> any ARM Mali SDK (ARM's shadow sample uses `namespace MaliSDK` with plain
+> `Matrix`/`Text`/`Shader` classes). The 13 files that had been mis-tagged
+> MIT/ARM (`ShadowMap.cpp/.h`, `3d.h`, `MRendererProgram.cpp`, `MVector4.h`, and
+> the 8 `ShadowMap_*` GLSL shaders) have been **re-attributed to BSD-3-Clause /
+> AMD**, so the entire `shadowsample` folder is now uniformly AMD BSD-3-Clause and
+> is **not** third-party.
 
 ---
 
@@ -137,9 +148,14 @@ completeness only. (CC0 carries no obligations regardless.)
 - The repository's **"Non-AMD Content"** field should be set to **Yes**, listing
   the components above.
 - Sections 1, 2 and 3 (ARM Vulkan SDK, ARM Mali OpenGL ES SDK for Android, and
-  ARM Mali OpenGL ES SDK for Linux) are fully remediated in-tree: the ARM MIT
-  notice plus the AMD modifications line is present on every derived file —
-  **131 files** total (Vulkan 52, GLES Android 58, GLES Mali-Linux 21).
+  the ARM Mali font engine) are fully remediated in-tree: the ARM MIT notice plus
+  the AMD modifications line is present on every derived file — **142 files** total
+  (Vulkan 56; GLES Android samples `compute_particles`/`occlusion_culling`/
+  `rotozoom`/`eglpreserve` 80; ARM font engine + shared font shaders 6).
+- **Correction (2026-07-02):** the `shadowsample` sample was previously counted
+  here as 21 ARM Mali-Linux files. It is **not** ARM-derived (AMD-authored
+  `M`-prefixed / `SDKXilinx` framework); its 13 mis-tagged files were re-attributed
+  to **BSD-3-Clause / AMD**, and it is no longer third-party. See Section 3.
 - **Section 4 (glmark2): RESOLVED by deleting the entire `meshrendersample`.**
   That sample contained GPL-3.0 glmark2-core code (`mesh.*`, `3DModel.*`) that
   could not ship under BSD-3, plus MIT libmatrix files. The whole sample was
