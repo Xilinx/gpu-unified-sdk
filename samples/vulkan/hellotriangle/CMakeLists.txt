@@ -2,11 +2,11 @@
 # Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 
-add_executable(texture
+add_executable(hellotriangle
 	main.cpp
 )
 
-target_link_libraries(texture PRIVATE
+target_link_libraries(hellotriangle PRIVATE
 	SdkCommon
 	SdkVulkan
 )
@@ -26,8 +26,14 @@ endif ()
 
 # Compile every shader under shaders/ into <binary_dir>/assets/shaders so the
 # executable can load them in-place (asset loader resolves "<exe_dir>/assets/").
+# Stage the binary and its compiled assets in the shared output folder.
+get_filename_component(_sample_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+set(_outdir "${SDK_OUTPUT_DIR}/vulkan/${_sample_name}")
+set_target_properties(hellotriangle PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY "${_outdir}")
+
 set(SHADER_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
-set(SHADER_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/assets/shaders")
+set(SHADER_BIN_DIR "${_outdir}/assets/shaders")
 file(MAKE_DIRECTORY "${SHADER_BIN_DIR}")
 
 file(GLOB SHADER_SOURCES
@@ -49,23 +55,23 @@ foreach (shader ${SHADER_SOURCES})
 	list(APPEND SHADER_SPV_FILES "${spv}")
 endforeach ()
 
-add_custom_target(texture_shaders DEPENDS ${SHADER_SPV_FILES})
-add_dependencies(texture texture_shaders)
+add_custom_target(hellotriangle_shaders DEPENDS ${SHADER_SPV_FILES})
+add_dependencies(hellotriangle hellotriangle_shaders)
 
-install(TARGETS texture
-	RUNTIME DESTINATION bin/texture
+install(TARGETS hellotriangle
+	RUNTIME DESTINATION bin/hellotriangle
 )
 
 install(FILES ${SHADER_SPV_FILES}
-	DESTINATION bin/texture/assets/shaders
+	DESTINATION bin/hellotriangle/assets/shaders
 )
 
 # Copy + install texture assets if present.
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures")
-	add_custom_command(TARGET texture POST_BUILD
+	add_custom_command(TARGET hellotriangle POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_directory
 			"${CMAKE_CURRENT_SOURCE_DIR}/assets/textures"
-			"${CMAKE_CURRENT_BINARY_DIR}/assets/textures")
+			"${_outdir}/assets/textures")
 	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures"
-		DESTINATION bin/texture/assets)
+		DESTINATION bin/hellotriangle/assets)
 endif ()

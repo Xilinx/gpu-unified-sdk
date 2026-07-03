@@ -3,8 +3,8 @@
 
 
 add_subdirectory(basic-compute)
-add_subdirectory(triangle)
-add_subdirectory(texture)
+add_subdirectory(hellotriangle)
+add_subdirectory(rotating-texture)
 add_subdirectory(spinning-cube)
 add_subdirectory(multipass)
 add_subdirectory(multisampling)

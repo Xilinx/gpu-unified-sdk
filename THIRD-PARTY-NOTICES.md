@@ -48,12 +48,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## 2. ARM Mali OpenGL ES SDK for Android  (MIT)
 
-**Used by:** the OpenGL ES samples `compute_particles`, `occlusion_culling`,
+**Used by:** the OpenGL ES samples `compute-particles`, `occlusion-culling`,
 `rotozoom`, and `eglpreserve` under `samples/opengles/` (source and GLSL shaders).
 These are derived from ARM's Mali OpenGL ES SDK for Android (each is an ARM
 `advanced_samples` entry, verified against ARM's published upstream). Per-file
 years follow upstream (`rotozoom` and `eglpreserve` = 2012-2017;
-`compute_particles` and `occlusion_culling` = 2014-2017).
+`compute-particles` and `occlusion-culling` = 2014-2017).
 
 **Origin:** ARM `opengl-es-sdk-for-android` (github.com/ARM-software/opengl-es-sdk-for-android)
 **License:** MIT — `Copyright (c) 2012-2017, ARM Limited and Contributors`
@@ -150,7 +150,7 @@ completeness only. (CC0 carries no obligations regardless.)
 - Sections 1, 2 and 3 (ARM Vulkan SDK, ARM Mali OpenGL ES SDK for Android, and
   the ARM Mali font engine) are fully remediated in-tree: the ARM MIT notice plus
   the AMD modifications line is present on every derived file — **142 files** total
-  (Vulkan 56; GLES Android samples `compute_particles`/`occlusion_culling`/
+  (Vulkan 56; GLES Android samples `compute-particles`/`occlusion-culling`/
   `rotozoom`/`eglpreserve` 80; ARM font engine + shared font shaders 6).
 - **Correction (2026-07-02):** the `shadowsample` sample was previously counted
   here as 21 ARM Mali-Linux files. It is **not** ARM-derived (AMD-authored

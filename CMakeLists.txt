@@ -85,6 +85,16 @@ if (SDK_BUILD_OPENGLES AND NOT SDK_BUILD_OPENGLES_2_0 AND NOT SDK_BUILD_OPENGLES
 	set(SDK_BUILD_OPENGLES_3_0 ON)
 endif()
 
+# Single shared output folder where every sample's built binary and its runtime
+# input/asset files are collected, each under its own <sample> subfolder:
+#   ${SDK_OUTPUT_DIR}/<sample>/<binary>
+#   ${SDK_OUTPUT_DIR}/<sample>/<assets...>
+# Defaults to <build>/output (outside the source tree). Override with an absolute
+# path at configure time, e.g. -D SDK_OUTPUT_DIR=/path/to/out
+set(SDK_OUTPUT_DIR "${CMAKE_BINARY_DIR}/output" CACHE PATH
+	"Shared output folder for all sample binaries and their input/asset files")
+message(STATUS "  Sample output dir: ${SDK_OUTPUT_DIR}")
+
 message(STATUS "GPU Unified SDK build selection (platform: ${SDK_PLATFORM_TARGET}):")
 message(STATUS "  OpenGL ES : ${SDK_BUILD_OPENGLES} (2.0=${SDK_BUILD_OPENGLES_2_0}, 3.0=${SDK_BUILD_OPENGLES_3_0})")
 message(STATUS "  OpenCL    : ${SDK_BUILD_OPENCL}")

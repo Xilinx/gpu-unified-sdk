@@ -34,18 +34,39 @@ __kernel void long_vectors(__global uchar* restrict imagePixels,
                            __global ulong* restrict squareOfPixels,
                            __global ulong* restrict sumOfPixels)
 {
-    const size_t block = get_global_id(0);
-    const ushort8 pixels = convert_ushort8(vload8(block, imagePixels));
+    /*
+     * Set i to be the ID of the kernel instance.
+     * If the global work size (set by clEnqueueNDRangeKernel) is n,
+     * then n kernels will be run and i will be in the range [0, n - 1].
+     */
+    int i = get_global_id(0);
 
-    ulong runningSum    = 0;
-    ulong runningSquare = 0;
-    for (int lane = 0; lane < 8; ++lane)
-    {
-        const ulong value = (ulong)pixels[lane];
-        runningSum    += value;
-        runningSquare += value * value;
-    }
+    /* Load 8 pixels (char) and convert them to shorts to calculate the square. */
+    ushort8 pixelShort = convert_ushort8(vload8(i, imagePixels));
+    /* Square of 255 < 2 ^ 16. */
+    ushort8 newSquareShort = pixelShort * pixelShort;
 
-    atom_add(sumOfPixels,    runningSum);
-    atom_add(squareOfPixels, runningSquare);
+    /*
+     * Convert original pixel value and the square to longs to sum
+     * all the vectors together and add the final values to the
+     * respective accumulators.
+     */
+    ulong8 pixelLong = convert_ulong8(pixelShort);
+    ulong8 newSquareLong = convert_ulong8(newSquareShort);
+
+    /*
+     * Use vector data type suffixes (.lo and .hi) to get smaller vector types,
+     * until we obtain one single value. This avoids indexing a vector with a
+     * runtime variable, which is not portable across OpenCL compilers.
+     */
+    ulong4 sumLongPixels1 = pixelLong.hi + pixelLong.lo;
+    ulong2 sumLongPixels2 = sumLongPixels1.hi + sumLongPixels1.lo;
+    ulong sumLongPixels3 = sumLongPixels2.hi + sumLongPixels2.lo;
+
+    ulong4 sumLongSquares1 = newSquareLong.hi + newSquareLong.lo;
+    ulong2 sumLongSquares2 = sumLongSquares1.hi + sumLongSquares1.lo;
+    ulong sumLongSquares3 = sumLongSquares2.hi + sumLongSquares2.lo;
+
+    atom_add(sumOfPixels, sumLongPixels3);
+    atom_add(squareOfPixels, sumLongSquares3);
 }

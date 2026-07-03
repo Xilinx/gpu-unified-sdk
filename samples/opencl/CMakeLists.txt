@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 
-add_subdirectory(adas-lane-detection)
+add_subdirectory(adas)
 add_subdirectory(convolution-filter)
 add_subdirectory(depth-map)
 add_subdirectory(fir-filter)

@@ -22,13 +22,12 @@ function(__amd_setup_toolchain)
 	endif()
 	if (NOT AMD_SDK AND NOT AMD_RECIPE)
 		message(FATAL_ERROR
-			"Specify path to the PetaLinux BSP SDK or recipe work dir in environment variable:\n"
-			"    AMD_SDK=/path/to/petalinux/bsp/images/linux/sdk\n"
-			"    or\n"
-			"    AMD_RECIPE=/path/to/petalinux/bsp/build/tmp/work/cortexa72-cortexa53-xilinx-linux/myproject/1.0-r0\n"
-			"NOTE: To build PetaLinux SDK:\n"
-			"    petalinux-build --sdk\n"
-			"    petalinux-package --sysroot\n"
+			"Specify path to the Yocto SDK in environment variable:\n"
+			"    AMD_SDK=/yocto/build/tmp/deploy/sdk/\n"
+			"NOTE: To build the Yocto SDK:\n"
+			"    MACHINE=<machine name> bitbake edf-linux-disk-image -c do_populate_sdk\n"
+			"    cd build/tmp/deploy/sdk/\n"
+			"    ./amd-edf-*.sh\n"
 		)
 	endif()
 

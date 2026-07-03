@@ -31,8 +31,14 @@ endif ()
 # Place compiled SPIR-V under <binary_dir>/assets/shaders so the executable can
 # load them in-place (the asset loader resolves "<exe_dir>/assets/<path>"), and
 # install the same layout next to the installed binary.
+# Stage the binary and its compiled assets in the shared output folder.
+get_filename_component(_sample_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+set(_outdir "${SDK_OUTPUT_DIR}/vulkan/${_sample_name}")
+set_target_properties(basic_compute PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY "${_outdir}")
+
 set(SHADER_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
-set(SHADER_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/assets/shaders")
+set(SHADER_BIN_DIR "${_outdir}/assets/shaders")
 file(MAKE_DIRECTORY "${SHADER_BIN_DIR}")
 
 set(SHADER_SPV_FILES)

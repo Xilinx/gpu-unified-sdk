@@ -21,6 +21,34 @@ set(GLES_WINDOW_H "1080" CACHE STRING "OpenGL ES sample window height")
 # engine and several samples. Samples stage this next to their binary.
 set(GLES_FONT_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../lib/sdk/GlesFramework/FontShaders")
 
+# Stage the backend's runtime-environment "exports" helper next to the samples so
+# it can be sourced before launching one (mirrors the Yocto recipe, which ships
+# the same script next to the installed samples). It sets EGL_PLATFORM and the
+# backend-specific runtime vars for the configured SDK_Platform. The script lives
+# one level above the version dirs so it applies to both opengl_es_2.0 and _3.0:
+#   ${SDK_OUTPUT_DIR}/opengles/<backend>/run_exports_arm_<backend>.sh
+# The X11 script is named with an uppercase "X11" in the source tree.
+string(TOLOWER "${SDK_Platform}" _gles_backend)
+if (_gles_backend STREQUAL "x11")
+	set(_gles_exports_script "run_exports_arm_X11.sh")
+else()
+	set(_gles_exports_script "run_exports_arm_${_gles_backend}.sh")
+endif()
+set(_gles_exports_src "${CMAKE_CURRENT_LIST_DIR}/${_gles_exports_script}")
+if (EXISTS "${_gles_exports_src}")
+	set(_gles_exports_dst
+		"${SDK_OUTPUT_DIR}/opengles/${_gles_backend}/${_gles_exports_script}")
+	add_custom_target(gles_run_exports ALL
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			"${_gles_exports_src}" "${_gles_exports_dst}"
+		BYPRODUCTS "${_gles_exports_dst}"
+		COMMENT "Staging OpenGL ES runtime exports (${_gles_exports_script})"
+		VERBATIM)
+else()
+	message(WARNING
+		"OpenGL ES runtime-exports script not found: ${_gles_exports_src}")
+endif()
+
 # GLES version sub-selection. On ZynqMP (Mali 400) only the OpenGL ES 2.0
 # samples are built; on Versal 2VE/2VM (Mali G78AE) both 2.0 and 3.0 are built. The
 # SDK_BUILD_OPENGLES_2_0 / _3_0 switches (top-level CMakeLists) control this and

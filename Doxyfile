@@ -127,9 +127,6 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
-# Document the shared libraries/frameworks and all sample applications, plus the
-# top-level README as the main page. The build directories and vendored 3rdparty
-# headers are excluded below.
 INPUT                  = lib/sdk \
                          samples \
                          README.md
@@ -149,24 +146,22 @@ FILE_PATTERNS          = *.c \
                          *.dox \
                          *.md
 RECURSIVE              = YES
-EXCLUDE                = 3rdparty
+EXCLUDE                =
 EXCLUDE_SYMLINKS       = NO
-# Exclude generated build trees, VCS metadata, and any in-tree build output dirs
-# (the samples stage assets next to their binaries under a "run" dir).
-EXCLUDE_PATTERNS       = */CMakeFiles/* \
+# Vendored 3rdparty code and the generated build / staged-output dirs. The CMake
+# "build" tree is matched via its child dirs (*/build/lib/*, */build/samples/*)
+# instead of "*/build/*" so it does not collide with a "/build/..." absolute
+# checkout path.
+EXCLUDE_PATTERNS       = */3rdparty/* \
                          */build/* \
-                         */build-*/* \
+                         */CMakeFiles/* \
                          */.git/* \
-                         */run/* \
-                         */3rdparty/*
+                         */run/*
 EXCLUDE_SYMBOLS        =
 EXAMPLE_PATH           =
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO
-# Images referenced from the README / .dox files. Add an image directory here
-# (e.g. doc_imgs) once such assets exist; left empty to avoid a warning when no
-# image directory is present.
-IMAGE_PATH             =
+IMAGE_PATH             = doc_imgs
 INPUT_FILTER           =
 FILTER_PATTERNS        =
 FILTER_SOURCE_FILES    = NO

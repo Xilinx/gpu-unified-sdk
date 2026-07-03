@@ -26,8 +26,14 @@ endif ()
 
 # Compile every shader under shaders/ into <binary_dir>/assets/shaders so the
 # executable can load them in-place (asset loader resolves "<exe_dir>/assets/").
+# Stage the binary and its compiled assets in the shared output folder.
+get_filename_component(_sample_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+set(_outdir "${SDK_OUTPUT_DIR}/vulkan/${_sample_name}")
+set_target_properties(multipass PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY "${_outdir}")
+
 set(SHADER_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
-set(SHADER_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/assets/shaders")
+set(SHADER_BIN_DIR "${_outdir}/assets/shaders")
 file(MAKE_DIRECTORY "${SHADER_BIN_DIR}")
 
 file(GLOB SHADER_SOURCES
@@ -65,7 +71,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures")
 	add_custom_command(TARGET multipass POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_directory
 			"${CMAKE_CURRENT_SOURCE_DIR}/assets/textures"
-			"${CMAKE_CURRENT_BINARY_DIR}/assets/textures")
+			"${_outdir}/assets/textures")
 	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures"
 		DESTINATION bin/multipass/assets)
 endif ()

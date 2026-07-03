@@ -4,7 +4,7 @@
 
 # OpenGL ES 2.0 samples.
 add_subdirectory(trianglesample)
-add_subdirectory(alpha_depthsample)
+add_subdirectory(alpha-depthsample)
 add_subdirectory(bbox)
 add_subdirectory(eglpreserve)
 add_subdirectory(eglrenderingsample)

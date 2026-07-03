@@ -35,7 +35,11 @@ target_include_directories(eglrenderingsample PRIVATE
 	${X11_INCLUDE_DIR}
 )
 
-set(_outdir "${CMAKE_CURRENT_BINARY_DIR}/run")
+get_filename_component(_sample_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+get_filename_component(_gles_version "${CMAKE_CURRENT_SOURCE_DIR}" DIRECTORY)
+get_filename_component(_gles_version "${_gles_version}" NAME)
+string(TOLOWER "${SDK_Platform}" _backend_name)
+set(_outdir "${SDK_OUTPUT_DIR}/opengles/${_backend_name}/${_gles_version}/${_sample_name}")
 set_target_properties(eglrenderingsample PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY "${_outdir}"
 	INSTALL_RPATH_USE_LINK_PATH FALSE

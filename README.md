@@ -58,8 +58,8 @@ applications and to explore implementation possibilities.
 - samples
   - vulkan
     - basic-compute   - Compute-shader particle simulation rendered via graphics
-    - triangle        - Trivial triangle rendering
-    - texture         - Rotating textured quad (Vulkan image sampling)
+    - hellotriangle   - Trivial triangle rendering
+    - rotating-texture - Rotating textured quad (Vulkan image sampling)
     - spinning-cube   - Textured 3D cube with depth buffering
     - multipass       - Deferred shading with multiple subpasses
     - multisampling   - MSAA rendering
@@ -76,7 +76,7 @@ applications and to explore implementation possibilities.
     FBDEV-only EGLImage and OpenCL demos noted below.
     - opengl_es_2.0
       - trianglesample               - Anti-aliased spinning triangle
-      - alpha_depthsample            - Alpha blending and depth testing
+      - alpha-depthsample            - Alpha blending and depth testing
       - bbox                         - Bounding-box rendering with on-screen text
       - eglpreserve                  - EGL_BUFFER_PRESERVED swap behaviour
       - eglrenderingsample           - EGLImage rendering (standalone, FBDEV only)
@@ -89,9 +89,9 @@ applications and to explore implementation possibilities.
       - waveformsample               - Animated waveform rendering
       - yuv2rgbsample                - YUV-to-RGB colour conversion on the GPU
     - opengl_es_3.0
-      - compute_particles            - Compute-shader particle system
-      - occlusion_culling            - Hi-Z GPU occlusion culling
-      - opencl_matmul                - OpenCL matrix multiply (built only when OpenCL is found)
+      - compute-particles            - Compute-shader particle system
+      - occlusion-culling            - Hi-Z GPU occlusion culling
+      - opencl-matmul                - OpenCL matrix multiply (built only when OpenCL is found)
 
     Each sample is installed into `bin/<sample>/` with its shaders/assets staged
     alongside the binary: per-sample shaders in `Supportingfiles/`, the shared
@@ -129,7 +129,7 @@ applications and to explore implementation possibilities.
     - image-scaling           - Image upscaling using OpenCL image objects and a sampler
     - integer-64-bit          - Pixel sum/sum-of-squares using 64-bit ints and atomics
     - depth-map               - Stereo disparity / obstacle detection from two images
-    - adas-lane-detection     - Lane visualization via Sobel edge detection (ADAS)
+    - adas                    - Lane visualization via Sobel edge detection (ADAS)
     - ml-classifier           - Average-intensity feature + linear "Bright/Dark" classifier
 
     Most OpenCL samples read their inputs from `assets/` (relative to the
@@ -152,7 +152,12 @@ Instructions below assume that path to the repo checkout is at `/path/to/src`.
 ## Target configuration
 
 Target build requires installed Yocto SDK with populated target sysroot.
-Assuming Yocto SDK ins installed at `/yocto/build/tmp/deploy/sdk/`.
+Assuming Yocto SDK installed at `/yocto/build/tmp/deploy/sdk/`.
+
+Configure **out-of-source**: `-S /path/to/src` is the source tree and `-B build`
+is an explicit build directory. All generated CMake files (the cache,
+`CMakeFiles/`, `build.ninja`, etc.) are written under `build/`, keeping the
+source tree clean.
 
 ```bash
 source /yocto/build/tmp/deploy/sdk/environment-setup-cortexa72-cortexa53-amd-linux
@@ -160,10 +165,12 @@ source /yocto/build/tmp/deploy/sdk/environment-setup-cortexa72-cortexa53-amd-lin
 AMD_SDK=/yocto/build/tmp/deploy/sdk/ \
 cmake \
     -G Ninja \
+    -S /path/to/src \
+    -B build \
     -D CMAKE_BUILD_TYPE=Release \
-    -D CMAKE_TOOLCHAIN_FILE=sdk.cmake \
-    -D SDK_Platform=wayland \
-    -D SDK_PLATFORM_TARGET=versal-2ve-2vm \
+    -D CMAKE_TOOLCHAIN_FILE=/path/to/src/sdk.cmake \
+    -D SDK_Platform=<x11/fbdev/wayland> \
+    -D SDK_PLATFORM_TARGET=<versal-2ve-2vm/zynqmp> \
 ```
 
 `SDK_Platform` selects the OpenGL ES samples' windowing backend
@@ -189,14 +196,17 @@ capabilities:
 
 ```bash
 # Build everything (Versal AI Edge Series Gen 2 / Mali G78AE) examples
-AMD_SDK=/path/to/yocto_sdk cmake -G Ninja -D SDK_PLATFORM_TARGET=versal-2ve-2vm -D ...
+export AMD_SDK=/path/to/yocto_sdk/
+cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_TOOLCHAIN_FILE=sdk.cmake -D SDK_Platform=<fbdev/wayland> -D SDK_PLATFORM_TARGET=versal-2ve-2vm -B build -D ...
 
 # Build only the (ZynqMP / Mali 400) examples -> OpenGL ES 2.0 only
-AMD_SDK=/path/to/yocto_sdk cmake -G Ninja -D SDK_PLATFORM_TARGET=zynqmp -D ...
-
-Application and supporting files will be generated inside run folder in each sample application folder.
-
+export AMD_SDK=/path/to/yocto_sdk/
+cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_TOOLCHAIN_FILE=sdk.cmake -D SDK_Platform=<x11,fbdev,wayland> -D SDK_PLATFORM_TARGET=zynqmp -B build -D ...
 ```
+
+Each sample's application binary and its supporting files are collected under the
+build directory in `build/output/<api>/.../<sample>/` (see [Compile](#compile)),
+not inside the source tree.
 
 ### Per-API switches
 
@@ -216,19 +226,22 @@ platform preset, so any combination can be built:
 
 ```bash
 # Build only the OpenCL samples
-cmake -G Ninja \
+export AMD_SDK=/path/to/yocto_sdk/
+cmake -G Ninja ... \
     -D SDK_BUILD_OPENGLES=OFF -D SDK_BUILD_OPENCL=ON -D SDK_BUILD_VULKAN=OFF \
-    /path/to/sdk -D ...
+    -D ...
 
 # Build only the Vulkan samples
-cmake -G Ninja \
+export AMD_SDK=/path/to/yocto_sdk/
+cmake -G Ninja ... \
     -D SDK_BUILD_OPENGLES=OFF -D SDK_BUILD_OPENCL=OFF -D SDK_BUILD_VULKAN=ON \
-    /path/to/sdk -D ...
+    -D ...
 
-# Build only the OpenGL ES samples (both versions)
-cmake -G Ninja \
+# Build only the OpenGL ES samples (both versions for versal-2ve-2vm and OpenGLES 2.0 for zynqmp)
+export AMD_SDK=/path/to/yocto_sdk/
+cmake -G Ninja ... \
     -D SDK_BUILD_OPENGLES=ON -D SDK_BUILD_OPENCL=OFF -D SDK_BUILD_VULKAN=OFF \
-    /path/to/sdk -D ...
+    -D ...
 ```
 
 Only the support libraries for the enabled sample sets are built, so a subset
@@ -242,10 +255,26 @@ ZynqMP / OpenGL-ES-only build needs neither the Vulkan nor OpenCL SDK packages).
 
 ## Compile
 
+Build from the explicit build directory configured above:
+
 ```bash
-ninja
+ninja -C build
 ```
 
+All build artifacts stay under `build/output/`. The sample binaries and their runtime
+input/asset files are collected under `build/ouput/`, classified by API:
+
+```
+build/output/
+├── opengles/<backend>/opengl_es_2.0/<sample>/    # <backend> = wayland | x11 | fbdev
+├── opengles/<backend>/opengl_es_3.0/<sample>/
+├── opencl/<sample>/
+└── vulkan/<sample>/
+```
+
+> The collection folder name defaults to `output` under the build directory.
+> Override it (e.g. to a path outside the tree) with
+> `-D SDK_OUTPUT_DIR=/abs/path/out` at configure time.
 
 # Running the OpenCL samples
 
@@ -272,7 +301,7 @@ Sample-specific inputs and arguments:
 - `matrix-multiply` accepts command line options (run `./matrix_multiply -h` for
   the full list, including `-va` to validate against a CPU reference and
   `-csv <file>` to dump results).
-- `mandelbrot-benchmark` and `adas-lane-detection` expect a 1024x1024
+- `mandelbrot-benchmark` and `adas` expect a 1024x1024
   `assets/input.bmp`.
 - `depth-map` expects a stereo pair `assets/left.bmp` and `assets/right.bmp`.
 - `sobel-filter` expects an `assets/input.bmp` whose width is a multiple of 16.
@@ -343,7 +372,7 @@ with multiple MIPMAP levels used as textures (stored as compressed ETC files).
 #### 4. **Alpha Depth Sample**
 ![Alpha Sample](doc_imgs/opengles/alpha.png)
 
-**📁 Source**: `samples/opengles/opengl_es_2.0/alpha_depthsample/`
+**📁 Source**: `samples/opengles/opengl_es_2.0/alpha-depthsample/`
 
 **Supported Window Environments:** ✅ FBDEV  ✅ X11  ✅ Wayland
 
@@ -428,7 +457,6 @@ sampling with rotation and zoom.
 ---
 
 #### 10. **YUV2RGB Conversion Sample**
-![YUV2RGB Sample](doc_imgs/opengles/Yuv2rgb.png)
 
 **📁 Source**: `samples/opengles/opengl_es_2.0/yuv2rgbsample/`
 
@@ -492,7 +520,7 @@ coordinates and class label from a text file in the same directory.
 #### 1. **Compute Particles Sample**
 ![Compute Particles Sample](doc_imgs/opengles/compute_particles.png)
 
-**📁 Source**: `samples/opengles/opengl_es_3.0/compute_particles/`
+**📁 Source**: `samples/opengles/opengl_es_3.0/compute-particles/`
 
 **Supported Window Environments:** ✅ FBDEV  ✅ X11  ✅ Wayland
 
@@ -506,7 +534,7 @@ compute capabilities for high-performance particle simulation.
 #### 2. **Occlusion Culling Sample**
 ![Occlusion Culling Sample](doc_imgs/opengles/occlusion_culling.png)
 
-**📁 Source**: `samples/opengles/opengl_es_3.0/occlusion_culling/`
+**📁 Source**: `samples/opengles/opengl_es_3.0/occlusion-culling/`
 
 **Supported Window Environments:** ✅ FBDEV  ✅ X11  ✅ Wayland
 
@@ -519,7 +547,7 @@ improved rendering performance in complex scenes.
 
 #### 3. **OpenCL Matrix Multiplication Sample**
 
-**📁 Source**: `samples/opengles/opengl_es_3.0/opencl_matmul/`
+**📁 Source**: `samples/opengles/opengl_es_3.0/opencl-matmul/`
 
 **Description:** Demonstrates GPGPU computing using OpenCL for high-performance
 matrix operations with OpenGL ES interoperability (built only when OpenCL is
@@ -738,7 +766,7 @@ applications with standard setup and error handling.
 #### 18. **ADAS Lane Detection**
 ![ADAS Lane Detection Sample](doc_imgs/opencl/Adas.bmp)
 
-**📁 Source**: `samples/opencl/adas-lane-detection/`
+**📁 Source**: `samples/opencl/adas/`
 
 **Description:** Lane visualization via Sobel edge detection (ADAS use case).
 Expects a 1024x1024 `assets/input.bmp`.
@@ -749,10 +777,10 @@ Expects a 1024x1024 `assets/input.bmp`.
 
 ## Vulkan Samples
 
-#### 1. **Triangle**
+#### 1. **Hello Triangle**
 ![Hello Triangle Sample](doc_imgs/vulkan/hello_triangle.png)
 
-**📁 Source**: `samples/vulkan/triangle/`
+**📁 Source**: `samples/vulkan/hellotriangle/`
 
 **Supported Platforms:** ✅ Wayland  ✅ X11 (Display/DRM-KMS)
 
@@ -763,10 +791,10 @@ Demonstrates swapchain setup, render passes, and the basic graphics pipeline.
 
 ---
 
-#### 2. **Texture (Rotating)**
+#### 2. **Rotating Texture**
 ![Rotating Texture Sample](doc_imgs/vulkan/rotating_texture.gif)
 
-**📁 Source**: `samples/vulkan/texture/`
+**📁 Source**: `samples/vulkan/rotating-texture/`
 
 **Supported Platforms:** ✅ Wayland  ✅ X11 (Display/DRM-KMS)
 
