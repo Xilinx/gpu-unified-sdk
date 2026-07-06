@@ -28,7 +28,7 @@
 #include <sys/time.h>
 #endif
 
-namespace SDKXilinx
+namespace SDKAMD
 {
 
     /**

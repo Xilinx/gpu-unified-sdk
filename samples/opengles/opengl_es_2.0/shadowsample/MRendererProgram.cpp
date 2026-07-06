@@ -5,7 +5,7 @@
 
 #include "MRendererProgram.h"
 
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 MRendererProgram::MRendererProgram()
     : theProgram(0),

@@ -36,7 +36,7 @@
 #define WINDOW_H 1080
 #endif
 
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 /**
  * @brief Main application entry point for compute shader particle system demonstration

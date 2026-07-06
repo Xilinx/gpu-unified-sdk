@@ -21,7 +21,7 @@
 
 #include "MDRRendererTexture.h"
 
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 MDRRendererTexture::MDRRendererTexture(
     bool aUseMipmap /*= true*/)

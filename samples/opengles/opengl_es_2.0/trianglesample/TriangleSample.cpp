@@ -49,7 +49,7 @@
 
 
 using std::string;
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 /** @brief Text rendering engine for displaying FPS and other information */
 FontEngine* text;

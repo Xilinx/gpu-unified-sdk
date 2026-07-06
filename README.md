@@ -23,8 +23,8 @@ applications and to explore implementation possibilities.
 
 - **🎯 Comprehensive Sample Suite**: Graphics (OpenGL ES / Vulkan) and compute
   (OpenCL) samples covering basic to advanced techniques.
-- **🏗️ Shared SDK Libraries**: Common, EGL, GLES, and Vulkan helper libraries
-  reused across all sample sets.
+- **🏗️ Shared SDK Libraries**: Common, GlesFramework, Vulkan, and OpenCL helper
+  libraries reused across all sample sets.
 - **🖥️ Multi-Platform Windowing**: Wayland, X11, and framebuffer (fbdev) backends
   selectable at configure time.
 - **⚡ Performance Optimized**: Leverages Mali 400 / Mali G78AE GPU hardware acceleration.
@@ -49,10 +49,11 @@ applications and to explore implementation possibilities.
   - stb    - stb_image.h single-header image loader (used by the Vulkan framework)
 - lib
   - sdk
-    - common - Common graphical API agnostic helper classes
-    - egl    - EGL helper classes
-    - gles   - GLES helper classes
-    - vulkan - Vulkan helper classes (RAII API)
+    - Common        - Graphics-API-agnostic helper classes
+    - GlesFramework - OpenGL ES helper classes + windowing (Wayland/X11/fbdev), EGL, fonts
+    - Vulkan        - Vulkan helper classes (RAII API)
+    - OpenCL        - OpenCL context/kernel management layer
+    - OpenGL        - DRM/DMA-BUF + EGL interop utilities (not built by default)
     - vulkan-strings    - Vulkan API identifiers to string convertor (debugging purposes)
     - vulkan-vendor-ids - GPU vendor name resolution from PCI ID global database (debugging purposes)
 - samples
@@ -79,7 +80,7 @@ applications and to explore implementation possibilities.
       - alpha-depthsample            - Alpha blending and depth testing
       - bbox                         - Bounding-box rendering with on-screen text
       - eglpreserve                  - EGL_BUFFER_PRESERVED swap behaviour
-      - eglrenderingsample           - EGLImage rendering (standalone, FBDEV only)
+      - eglrenderingsample           - EGLImage rendering (FBDEV only)
       - framebufferobject-fbosample  - Render-to-texture via an FBO
       - multicubesample              - Multiple textured spinning cubes
       - particlerenderingsample      - GPU particle / molecule system
@@ -93,12 +94,20 @@ applications and to explore implementation possibilities.
       - occlusion-culling            - Hi-Z GPU occlusion culling
       - opencl-matmul                - OpenCL matrix multiply (built only when OpenCL is found)
 
-    Each sample is installed into `bin/<sample>/` with its shaders/assets staged
-    alongside the binary: per-sample shaders in `Supportingfiles/`, the shared
-    font shaders in `FontShaders/`, and any extra data (`models/`, `assets/`,
-    `cl_kernels/`). The samples load these with paths relative to the working
-    directory, so run each one from its own install directory (e.g.
-    `cd bin/trianglesample && ./trianglesample`).
+    Each sample is collected into its own directory under the build output tree
+    (`build/output/opengles/<backend>/<gles_version>/<sample>/`) with its
+    shaders/assets staged alongside the binary: per-sample shaders in
+    `Supportingfiles/`, the shared font shaders in `FontShaders/`, and any extra
+    data (`models/`, `assets/`). The samples load these with paths relative to the
+    working directory, so run each one from its own directory, after bringing up
+    the backend's display server and sourcing its runtime-exports helper (see
+    [Running the OpenGL ES samples](#running-the-opengl-es-samples)):
+
+    ```bash
+    cd build/output/opengles/wayland/opengl_es_2.0/trianglesample
+    source <sdk>/samples/opengles/run_exports_wayland.sh
+    ./trianglesample
+    ```
 
     The windowing backend of the framework-based samples is selected at configure
     time with `-D SDK_Platform=<wayland|x11|fbdev>` (default `wayland`):
@@ -139,10 +148,15 @@ applications and to explore implementation possibilities.
 
 # Build
 
-SDK application uses CMake as a build system and comes with
-most of the build time dependencies through the Google repo.
+The SDK uses **CMake** (with the Ninja generator) as its build system. It does
+not download anything at configure time: the build-time dependencies are either
+vendored in-tree under `3rdparty/` (e.g. `stb_image`, the Vulkan headers) or
+provided by the cross-compilation toolchain's sysroot (e.g. EGL/GLES, Vulkan,
+Wayland, X11, zlib), located via `find_package`/`pkg-config`. The only external
+prerequisite you must supply is that toolchain (the Yocto SDK), described under
+[Target configuration](#target-configuration) below.
 
-Instructions below assume that path to the repo checkout is at `/path/to/src`.
+The instructions below assume you have already checked out the repository and are working from its root directory.
 
 > **Important:** No sample sets are built by default. Add a platform preset
 > (e.g. `-D SDK_PLATFORM_TARGET=versal-2ve-2vm`) or per-API switches
@@ -154,21 +168,18 @@ Instructions below assume that path to the repo checkout is at `/path/to/src`.
 Target build requires installed Yocto SDK with populated target sysroot.
 Assuming Yocto SDK installed at `/yocto/build/tmp/deploy/sdk/`.
 
-Configure **out-of-source**: `-S /path/to/src` is the source tree and `-B build`
-is an explicit build directory. All generated CMake files (the cache,
-`CMakeFiles/`, `build.ninja`, etc.) are written under `build/`, keeping the
-source tree clean.
+Configure **out-of-source**: `-B build` is an explicit build directory. All generated CMake files (the cache, `CMakeFiles/`, `build.ninja`, etc.) are written under `build/`, keeping the source tree clean.
 
 ```bash
 source /yocto/build/tmp/deploy/sdk/environment-setup-cortexa72-cortexa53-amd-linux
 
-AMD_SDK=/yocto/build/tmp/deploy/sdk/ \
+export AMD_SDK=/yocto/build/tmp/deploy/sdk/
+
 cmake \
     -G Ninja \
-    -S /path/to/src \
     -B build \
     -D CMAKE_BUILD_TYPE=Release \
-    -D CMAKE_TOOLCHAIN_FILE=/path/to/src/sdk.cmake \
+    -D CMAKE_TOOLCHAIN_FILE=sdk.cmake \
     -D SDK_Platform=<x11/fbdev/wayland> \
     -D SDK_PLATFORM_TARGET=<versal-2ve-2vm/zynqmp> \
 ```
@@ -205,21 +216,23 @@ cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_TOOLCHAIN_FILE=sdk.cmake -D 
 ```
 
 Each sample's application binary and its supporting files are collected under the
-build directory in `build/output/<api>/.../<sample>/` (see [Compile](#compile)),
-not inside the source tree.
+build directory (OpenGL ES: `build/output/opengles/<backend>/<gles_version>/<sample>/`;
+OpenCL/Vulkan: `build/output/<api>/<sample>/`; see [Compile](#compile)), not inside
+the source tree.
 
 ### Per-API switches
 
-All sample sets are **OFF by default**. These ON/OFF options override the
-platform preset, so any combination can be built:
+Each option's **default is derived from `SDK_PLATFORM_TARGET`** (all OFF for the
+default `none`; see the table above). An explicit `-D SDK_BUILD_*` on the command
+line overrides the platform-preset default, so any combination can be built:
 
-| Option | Default | Effect |
-|--------|---------|--------|
-| `SDK_BUILD_OPENGLES` | OFF | Build the OpenGL ES samples |
-| `SDK_BUILD_OPENGLES_2_0` | OFF | Build the OpenGL ES **2.0** samples |
-| `SDK_BUILD_OPENGLES_3_0` | OFF | Build the OpenGL ES **3.0** samples |
-| `SDK_BUILD_OPENCL` | OFF | Build the OpenCL samples |
-| `SDK_BUILD_VULKAN` | OFF | Build the Vulkan samples |
+| Option | Default (`none` / `zynqmp` / `versal-2ve-2vm`) | Effect |
+|--------|------------------------------------------------|--------|
+| `SDK_BUILD_OPENGLES` | OFF / ON / ON | Build the OpenGL ES samples |
+| `SDK_BUILD_OPENGLES_2_0` | OFF / ON / ON | Build the OpenGL ES **2.0** samples |
+| `SDK_BUILD_OPENGLES_3_0` | OFF / OFF / ON | Build the OpenGL ES **3.0** samples |
+| `SDK_BUILD_OPENCL` | OFF / OFF / ON | Build the OpenCL samples |
+| `SDK_BUILD_VULKAN` | OFF / OFF / ON | Build the Vulkan samples |
 
 > Enabling `SDK_BUILD_OPENGLES` without selecting a version builds **both** 2.0
 > and 3.0; use `SDK_BUILD_OPENGLES_2_0` / `_3_0` to pick one.
@@ -262,10 +275,11 @@ ninja -C build
 ```
 
 All build artifacts stay under `build/output/`. The sample binaries and their runtime
-input/asset files are collected under `build/ouput/`, classified by API:
+input/asset files are collected under `build/output/`, classified by API:
 
 ```
 build/output/
+├── lib/                                          # SDK shared libs (libSdkCommon/OpenCL/Vulkan)
 ├── opengles/<backend>/opengl_es_2.0/<sample>/    # <backend> = wayland | x11 | fbdev
 ├── opengles/<backend>/opengl_es_3.0/<sample>/
 ├── opencl/<sample>/
@@ -276,15 +290,24 @@ build/output/
 > Override it (e.g. to a path outside the tree) with
 > `-D SDK_OUTPUT_DIR=/abs/path/out` at configure time.
 
+> The OpenCL and Vulkan samples link the SDK shared libraries, which are staged
+> once into the single `build/output/lib/` directory. Each such sample carries an
+> `$ORIGIN/../../lib` RPATH, so it locates those libraries automatically -- no
+> `LD_LIBRARY_PATH` is needed. When deploying to a target, keep the shared `lib/`
+> folder at the same level relative to the sample (i.e. copy `build/output/` as a
+> unit, or preserve the `<api>/<sample>` + sibling `lib/` layout). The OpenGL ES
+> samples link the framework statically and need no shared libraries.
+
 # Running the OpenCL samples
 
-Each OpenCL sample is installed into `bin/<sample>/` together with its `assets/`
-directory (kernels and input images). Because the samples load their kernels and
-inputs with paths relative to the working directory (e.g. `assets/foo.cl`,
+Each OpenCL sample is collected into its own directory under the build output
+tree (`build/output/opencl/<sample>/`) together with its `assets/` directory
+(kernels and input images). Because the samples load their kernels and inputs
+with paths relative to the working directory (e.g. `assets/foo.cl`,
 `assets/input.bmp`), run each sample from inside its own directory:
 
 ```bash
-cd bin/gaussian_filter
+cd build/output/opencl/gaussian-filter
 ./gaussian_filter
 ```
 
@@ -311,6 +334,166 @@ Sample-specific inputs and arguments:
   `cl_khr_int64_base_atomics` device extension.
 - `hello-world-c`, `hello-world-opencl`, `vector-hello-world`, `opencl-template`
   and `sgemm` take no inputs and produce no image output.
+
+
+# Running the OpenGL ES samples
+
+The windowing backend is chosen at configure time with
+`-D SDK_Platform=<wayland|x11|fbdev>` (default `wayland`). At run time each
+sample needs its backend's display server up and the matching environment
+exported.
+
+A per-backend runtime-exports helper is provided under `samples/opengles/`:
+
+```
+run_exports_wayland.sh   run_exports_X11.sh   run_exports_fbdev.sh
+```
+
+Each helper sets `DISPLAY` and the backend-specific display vars (for Wayland,
+the compositor-socket discovery).
+
+> **Important:** you must **`source`** the helper (so its `export`s apply to your
+> current shell) -- do **not** run it with `./` (a child process cannot change
+> your shell's environment).
+
+> **ZynqMP only -- select the Mali driver variant.** On ZynqMP the Mali
+> user-space driver ships per-backend variants
+> (`/usr/lib/<backend>/libMali.so.9.0`); the active one **must** match the
+> windowing backend the samples were built for, otherwise EGL fails with
+> `No EGL Display available`. Select it once (as **root**) before running:
+>
+> ```bash
+> # <backend> = wayland | x11 | fbdev
+> update-alternatives --install /usr/lib/libMali.so.9.0 libmali /usr/lib/<backend>/libMali.so.9.0 30
+> ```
+>
+> This is **not** needed on Versal 2VE/2VM.
+
+Because every sample loads its shaders/assets with paths relative to the working
+directory, run each one **from inside its own directory**.
+
+- **`wayland`** -- render through a Wayland (xdg-shell) surface.
+
+  1. Start the compositor if it is not already running. On the AMD Yocto image
+     Weston is a systemd service:
+
+     ```bash
+     systemctl start weston            # start Weston
+     systemctl status weston           # confirm it is active
+     ```
+
+     Check whether one is already up with
+     `ls -l /run/wayland-* /run/user/*/wayland-*`.
+  2. Source the helper and run the sample:
+
+     ```bash
+     cd build/output/opengles/wayland/opengl_es_2.0/trianglesample
+     source <sdk>/samples/opengles/run_exports_wayland.sh
+     ./trianglesample
+     ```
+
+     The helper discovers the compositor socket via
+     `XDG_RUNTIME_DIR`/`WAYLAND_DISPLAY`. If the compositor runs under a
+     different user than the one launching the sample, override them after
+     sourcing:
+
+     ```bash
+     export XDG_RUNTIME_DIR=/run/user/1000   # the compositor user's runtime dir
+     export WAYLAND_DISPLAY=wayland-1         # the socket name in that dir
+     ```
+
+- **`x11`** -- render into an X11 window.
+
+  1. Start the X server if it is not already running. On the AMD Yocto image the
+     X server is a systemd service:
+
+     ```bash
+     systemctl start xserver-nodm      # start the X server
+     systemctl status xserver-nodm     # confirm it is active
+     ```
+
+     Alternatively, start the Xorg server directly:
+
+     ```bash
+     /usr/bin/Xorg -depth 16 &
+     ```
+  2. Source the helper (it exports `DISPLAY=:0.0`) and run the sample:
+
+     ```bash
+     cd build/output/opengles/x11/opengl_es_2.0/trianglesample
+     source <sdk>/samples/opengles/run_exports_X11.sh
+     ./trianglesample
+     ```
+
+- **`fbdev`** -- render directly to the Linux framebuffer (`/dev/fb0`). Run from
+  a bare console with **no** compositor holding the display:
+
+  ```bash
+  cd build/output/opengles/fbdev/opengl_es_2.0/trianglesample
+  source <sdk>/samples/opengles/run_exports_fbdev.sh
+  ./trianglesample
+  ```
+
+> **`eglrenderingsample` is different:** it is a standalone **FBDEV-only** demo
+> that manages its own EGL surface via `/dev/fb0` and does **not** use the
+> framework's windowing. It ignores the Wayland/X11 backends -- run it from a
+> bare console with a working framebuffer, regardless of the `SDK_Platform` the
+> rest of the build used. (Even though it is staged under the `<backend>` folder
+> named after your `SDK_Platform`, that folder name is only a label; the binary
+> is always the fbdev demo.)
+
+
+# Running the Vulkan samples
+
+Unlike the OpenGL ES samples, the Vulkan samples select their windowing backend
+**at run time** (a single binary supports both), so there is no `SDK_Platform`
+build switch or exports helper for them. Each sample is collected into its own
+directory with its compiled SPIR-V shaders and textures staged alongside:
+
+```
+build/output/vulkan/<sample>/            # binary + assets/shaders/*.spv (+ assets/textures)
+```
+
+Because the samples load their assets with paths relative to the working
+directory, run each one **from inside its own directory**:
+
+```bash
+cd build/output/vulkan/hellotriangle
+./hellotriangle            # auto-detect backend
+```
+
+**Windowing backend selection** -- pass a flag, or let it auto-detect:
+
+| Flag | Backend | When to use |
+|---|---|---|
+| `--wayland` | `VK_KHR_wayland_surface` | a compositor (e.g. Weston) is running |
+| `--display` | `VK_KHR_display` (direct DRM/KMS) | no compositor; the sample owns the display |
+| *(none)* | auto | wayland if a compositor socket is present, else display |
+
+- **`--wayland`** -- start the compositor first and point the client at its
+  socket (same as the OpenGL ES Wayland steps):
+
+  ```bash
+  systemctl start weston
+  export XDG_RUNTIME_DIR=/run/user/1000    # only if the compositor runs as another user
+  export WAYLAND_DISPLAY=wayland-1          #   (find it: ls -l /run/user/*/wayland-*)
+  cd build/output/vulkan/spinning-cube
+  ./spinning-cube --wayland
+  ```
+
+- **`--display`** -- run from a bare console with **no** compositor holding the
+  display (`VK_KHR_display` needs exclusive DRM/KMS access):
+
+  ```bash
+  cd build/output/vulkan/spinning-cube
+  ./spinning-cube --display
+  ```
+
+  > If a compositor is running it owns the display and `--display` reports
+  > "No displays available." -- stop the compositor, or use `--wayland` instead.
+
+The `basic-compute` sample runs a compute-shader simulation and presents the
+result the same way (it accepts the same backend flags).
 
 
 ---
@@ -908,19 +1091,21 @@ pre-generated and GPU-generated mipmaps.
 The unified SDK provides shared support libraries under `lib/sdk/`, reused by all
 sample sets:
 
-- **common** — Graphics-API-agnostic helpers (math, timing, image I/O, file
-  utilities).
-- **egl** — EGL context/surface management for the OpenGL ES samples.
-- **gles** — OpenGL ES helper classes and the `SdkGlesFramework` windowing
-  abstraction (Wayland / X11 / fbdev), font rendering, texture and matrix
-  utilities.
-- **vulkan** — RAII-style Vulkan helper classes (context, swapchain, command
-  buffers, assets) backing the Vulkan samples.
-- **vulkan-strings / vulkan-vendor-ids** — Debugging helpers that resolve Vulkan
-  enums and GPU vendor names to human-readable strings.
-
-The OpenCL samples build on the shared `common` image/bitmap helpers plus a thin
-OpenCL context/kernel management layer.
+- **Common** (`SdkCommon`) — Graphics-API-agnostic helpers: argument parsing,
+  math/geometry, timing and frame counting, image/bitmap I/O, file/folder
+  utilities, and DMA/GBM buffer helpers.
+- **GlesFramework** (`SdkGlesFramework`) — OpenGL ES helper classes and the
+  windowing abstraction (Wayland / X11 / fbdev), including EGL context/surface
+  management, font rendering, and texture and matrix utilities.
+- **Vulkan** (`SdkVulkan`) — RAII-style Vulkan helper classes (context,
+  swapchain, command buffers, assets) backing the Vulkan samples.
+- **vulkan-strings / vulkan-vendor-ids** (`VulkanStrings` / `VulkanVendorIds`) —
+  Debugging helpers that resolve Vulkan enums and GPU vendor names to
+  human-readable strings.
+- **OpenCL** (`SdkOpenCL`) — A thin OpenCL context/kernel management layer used by
+  the OpenCL samples (built on the shared `Common` image/bitmap helpers).
+- **OpenGL** (`SdkOpenGL`) — DRM/DMA-BUF and EGL interop utilities for desktop
+  OpenGL / zero-copy texturing (not built in the default configuration).
 
 # 🔧 Adding New Samples
 

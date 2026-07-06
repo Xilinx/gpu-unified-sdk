@@ -52,7 +52,7 @@
 
 using std::string;
 using namespace std;
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 /** @brief Text rendering engine for displaying FPS and sample information */
 FontEngine* text;

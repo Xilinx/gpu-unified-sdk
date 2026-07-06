@@ -25,7 +25,7 @@
 
 #include "XGLSLCompile.h"
 
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 MDRRendererProgram::MDRRendererProgram()
     :

@@ -83,7 +83,7 @@
         sizeHints.x = 10;
         sizeHints.y = 10;
 
-        XSetStandardProperties(display, window, "Xilinx OpenGL ES SDK", "", None, 0, 0, &sizeHints);
+        XSetStandardProperties(display, window, "AMD OpenGL ES SDK", "", None, 0, 0, &sizeHints);
         XMapWindow(display, window);
         XIfEvent(display, &event, wait_for_map, (char*)&window);
         XSetWMColormapWindows(display, window, &window, 1);

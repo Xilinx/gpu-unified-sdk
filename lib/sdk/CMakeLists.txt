@@ -90,10 +90,15 @@ foreach(_lib SdkCommon SdkOpenCL SdkVulkan SdkOpenGL)
 			# $ORIGIN into the libraries themselves makes libSdkVulkan.so /
 			# libSdkOpenCL.so find libSdkCommon.so regardless of how they were
 			# loaded. INSTALL_RPATH is applied during install (CMake's install-time
-			# RPATH edit, which the Yocto recipe triggers via cmake_install.cmake),
-			# so build-tree runs keep their normal link-path RPATH.
+			# RPATH edit, which the Yocto recipe triggers via cmake_install.cmake).
+			# Also append $ORIGIN to the BUILD-tree RPATH so that when the sample
+			# subtrees stage these .so files side-by-side into their own lib/
+			# folder (see samples/opencl and samples/vulkan), each library still
+			# resolves its sibling (e.g. libSdkOpenCL.so -> libSdkCommon.so) from
+			# that co-located directory without an install step.
 			set_target_properties(${_lib} PROPERTIES
-				INSTALL_RPATH "$ORIGIN")
+				INSTALL_RPATH "$ORIGIN"
+				BUILD_RPATH "$ORIGIN")
 		endif()
 	endif()
 endforeach()

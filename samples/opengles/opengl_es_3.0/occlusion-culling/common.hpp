@@ -34,7 +34,7 @@
 #include "XTime.h"
 
 using namespace std;
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 #include <GLES3/gl31.h>
 

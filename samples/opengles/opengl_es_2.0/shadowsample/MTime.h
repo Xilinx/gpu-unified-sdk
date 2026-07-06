@@ -160,7 +160,7 @@ private:
     /**
      * @brief Timer object used for time measurement.
      */
-    SDKXilinx::Timer theTimer;
+    SDKAMD::Timer theTimer;
 };
 
 #endif // M_SHADOWMAPDR_TIME_HPP

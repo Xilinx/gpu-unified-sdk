@@ -37,7 +37,7 @@
 #include <string>
 using namespace std;
 using std::string;
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 FontEngine *text;
 

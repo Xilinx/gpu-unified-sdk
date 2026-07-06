@@ -7,6 +7,7 @@
 //Include Header Files
 /*********************************************************************************************************************************************************/
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <math.h>
 #include <poll.h>
@@ -366,15 +367,20 @@ static void create_shaders_texture(void)
 
 //Function Statrts
 /*********************************************************************************************************************************************************/
+/* Allocate a writable, CPU-visible scratch buffer used to stage the source
+ * pixel data that is handed to glTexImage2D. dev_name is unused. */
+#define STATIC_MEM_SIZE 0x1000000  /* 16 MB */
+
 void prepareStaticMem(const char *dev_name)
 {
-	int fd, ret;
-	memfd = open(dev_name, O_RDWR | O_SYNC);
-	if (fd < 0)
-		printf("%s %d %d\n", __FUNCTION__, __LINE__, fd);
-	mapped_base = mmap((void *)0x3e000000, 0x1000000, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, 0);
-	if (mapped_base == MAP_FAILED){
-		printf("%s %d %d\n", __FUNCTION__, __LINE__, ret);
+	(void)dev_name;
+	memfd = -1;
+	mapped_base = mmap(NULL, STATIC_MEM_SIZE, PROT_READ | PROT_WRITE,
+			MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (mapped_base == MAP_FAILED) {
+		printf("%s %d: failed to allocate scratch buffer: %s\n",
+				__FUNCTION__, __LINE__, strerror(errno));
+		exit(1);
 	}
 }
 //Function Ends

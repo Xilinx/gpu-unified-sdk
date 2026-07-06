@@ -21,7 +21,7 @@
 
 #include "MRendererPrimitive.h"
 
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 MRendererPrimitive::MRendererPrimitive()
     :

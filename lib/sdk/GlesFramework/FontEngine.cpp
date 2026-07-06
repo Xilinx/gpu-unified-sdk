@@ -42,14 +42,14 @@
 using std::string;
 
 /**
- * @namespace SDKXilinx
+ * @namespace SDKAMD
  * @brief AMD GPU SDK namespace containing graphics and computation utilities.
  * 
  * This namespace contains various classes and utilities for GPU programming,
  * including font rendering, texture management, matrix operations, and EGL
  * interface management for AMD GPU SDK applications.
  */
-namespace SDKXilinx
+namespace SDKAMD
 { 
     // Static constant definitions for FontEngine class
     const string FontEngine::textureFilename = "font.raw";

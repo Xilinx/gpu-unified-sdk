@@ -21,7 +21,7 @@
 
 #include "MDRRenderer.h"
 
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 MDRRenderer::MDRRenderer()
     :

@@ -31,7 +31,7 @@
 
 using std::string;
 using namespace std;
-using namespace SDKXilinx;
+using namespace SDKAMD;
 FontEngine *text;
 
 std::string fontResourceDirectory = "FontShaders/";

@@ -29,7 +29,7 @@
 
 #include <string>
 
-namespace SDKXilinx
+namespace SDKAMD
 {
     /**
      * @class FontEngine

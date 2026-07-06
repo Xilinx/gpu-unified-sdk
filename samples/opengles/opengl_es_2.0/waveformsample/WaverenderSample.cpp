@@ -38,7 +38,7 @@
 
 using std::string;
 
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 /* A text object to draw text on the screen. */
 FontEngine *text;

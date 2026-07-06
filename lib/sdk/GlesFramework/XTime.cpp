@@ -26,7 +26,7 @@
 #include <cstdio>
 #include <windows.h>
 
-namespace SDKXilinx
+namespace SDKAMD
 {
     /**
      * @brief Constructor for Timer class.
@@ -116,7 +116,7 @@ namespace SDKXilinx
 
 #include <sys/time.h>
 
-namespace SDKXilinx
+namespace SDKAMD
 {
     /**
      * @brief Constructor for Timer class (Unix/Linux version).

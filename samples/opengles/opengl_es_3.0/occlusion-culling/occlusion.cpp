@@ -41,7 +41,7 @@
 #endif
 
 using namespace std;
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 
 
@@ -85,7 +85,7 @@ static void run_application(XPodium *platform)
 
     FontEngine *text = new FontEngine("Supportingfiles/", WINDOW_W, WINDOW_H);
 
-    using namespace SDKXilinx;
+    using namespace SDKAMD;
     Timer  timer;
     timer.reset();
 

@@ -47,7 +47,7 @@
 #endif
 
 using std::string;
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 FontEngine *text;
 

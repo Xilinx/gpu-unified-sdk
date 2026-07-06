@@ -3,22 +3,16 @@
 # Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 #
-# Runtime environment for the OpenGL ES samples on the aarch64 target using the
+# Runtime environment for the OpenGL ES samples on the target using the
 # Wayland windowing backend.
 #
 # Source this on the target (or in your run environment) before launching a
 # sample that was built with -D SDK_Platform=wayland:
 #
-#     source run_exports_arm_wayland.sh
+#     source run_exports_wayland.sh
 #     ./trianglesample
 
-# Mali user-space driver location (libEGL / libGLESv2 live here on the target).
-export MALI_LIBS=/usr/lib
-export MALI_INCLUDE=/usr/include
-export LD_LIBRARY_PATH=/usr/lib/:${LD_LIBRARY_PATH}
-
-# Select the Wayland EGL platform at runtime.
-export EGL_PLATFORM=wayland
+export DISPLAY=:0.0
 
 # A Wayland client finds the compositor socket at
 # "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY". Prefer the per-user runtime dir; if it has

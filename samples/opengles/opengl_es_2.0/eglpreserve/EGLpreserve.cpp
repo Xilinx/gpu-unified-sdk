@@ -44,7 +44,7 @@
 #endif
 
 using std::string;
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 /* Asset directories and filenames. */
 string resourceDirectory = "Supportingfiles/";

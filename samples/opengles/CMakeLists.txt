@@ -23,16 +23,17 @@ set(GLES_FONT_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../lib/sdk/GlesFramework
 
 # Stage the backend's runtime-environment "exports" helper next to the samples so
 # it can be sourced before launching one (mirrors the Yocto recipe, which ships
-# the same script next to the installed samples). It sets EGL_PLATFORM and the
-# backend-specific runtime vars for the configured SDK_Platform. The script lives
-# one level above the version dirs so it applies to both opengl_es_2.0 and _3.0:
-#   ${SDK_OUTPUT_DIR}/opengles/<backend>/run_exports_arm_<backend>.sh
+# the same script next to the installed samples). It sets the backend-specific
+# runtime vars for the configured SDK_Platform and selects the matching Mali
+# driver variant. The script lives one level above the version dirs so it applies
+# to both opengl_es_2.0 and _3.0:
+#   ${SDK_OUTPUT_DIR}/opengles/<backend>/run_exports_<backend>.sh
 # The X11 script is named with an uppercase "X11" in the source tree.
 string(TOLOWER "${SDK_Platform}" _gles_backend)
 if (_gles_backend STREQUAL "x11")
-	set(_gles_exports_script "run_exports_arm_X11.sh")
+	set(_gles_exports_script "run_exports_X11.sh")
 else()
-	set(_gles_exports_script "run_exports_arm_${_gles_backend}.sh")
+	set(_gles_exports_script "run_exports_${_gles_backend}.sh")
 endif()
 set(_gles_exports_src "${CMAKE_CURRENT_LIST_DIR}/${_gles_exports_script}")
 if (EXISTS "${_gles_exports_src}")

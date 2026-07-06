@@ -22,7 +22,7 @@
 #include "MDRRenderTarget.h"
 #include "MDRRendererTexture.h"
 
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 MDRRenderTarget::MDRRenderTarget(
     MDRMode aMode)

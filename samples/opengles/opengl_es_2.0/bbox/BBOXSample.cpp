@@ -21,7 +21,7 @@
 
 using std::string;
 using std::vector;
-using namespace SDKXilinx;
+using namespace SDKAMD;
 
 struct BBox {
     string label;
