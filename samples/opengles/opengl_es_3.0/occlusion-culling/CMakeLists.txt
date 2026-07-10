@@ -18,6 +18,11 @@ target_include_directories(occlusion-culling PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+target_compile_definitions(occlusion-culling PRIVATE
+	WINDOW_W=${GLES_WINDOW_W}
+	WINDOW_H=${GLES_WINDOW_H}
+)
+
 # Stage the binary and its assets in a dedicated output directory so the asset
 # copies never target the source tree.
 get_filename_component(_sample_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)

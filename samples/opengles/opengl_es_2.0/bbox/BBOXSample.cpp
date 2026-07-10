@@ -182,7 +182,12 @@ void GraphicsUpdate(void) {
 
 int main(int argc, char* argv[]) {
     XPodium* podium = XPodium::getHandler();
-    podium->prepareWindow(SCENE_WIDTH, SCENE_HEIGHT);
+    // Size the window/surface and viewport to WINDOW_W x WINDOW_H
+    // (GLES_WINDOW_W/H, default 1920x1080), matching the other samples. The
+    // scene itself is laid out in a fixed SCENE_WIDTH x SCENE_HEIGHT design
+    // space (see the ortho projection in GraphicsUpdate), which scales to fill
+    // the window.
+    podium->prepareWindow(WINDOW_W, WINDOW_H);
 
     if (argc >= 2) {
         int samples = atoi(argv[1]);
@@ -196,7 +201,7 @@ int main(int argc, char* argv[]) {
     eglGetConfigAttrib(CoreEGL::display, CoreEGL::config, EGL_SAMPLES, &attributeValue);
     printf("EGL_SAMPLES = %d\n", attributeValue);
 
-    if (!prepareGraphics(SCENE_WIDTH, SCENE_HEIGHT)) {
+    if (!prepareGraphics(WINDOW_W, WINDOW_H)) {
         printf("Failed to initialize graphics\n");
         return 1;
     }

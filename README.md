@@ -434,6 +434,18 @@ directory, run each one **from inside its own directory**.
   ./trianglesample
   ```
 
+  **Fullscreen / render resolution.** The samples render at a fixed size
+  (default 1920x1080). For a full-screen result, set the render size to match your display's resolution at configure time using
+  the `GLES_WINDOW_W` / `GLES_WINDOW_H` CMake variables, e.g.:
+
+  ```bash
+  cmake ... -D SDK_Platform=fbdev -D GLES_WINDOW_W=3840 -D GLES_WINDOW_H=2160
+  ```
+
+  This applies to all framework-based OpenGL ES samples (it sets the render
+  surface, viewport, and projection size). Match the values to your panel's
+  native resolution for a full-screen render.
+
 > **`eglrenderingsample` is different:** it is a standalone **FBDEV-only** demo
 > that manages its own EGL surface via `/dev/fb0` and does **not** use the
 > framework's windowing. It ignores the Wayland/X11 backends -- run it from a
