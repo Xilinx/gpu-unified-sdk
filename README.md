@@ -2,7 +2,7 @@
 
 # AMD GPU Unified SDK
 
-**A unified development toolkit for AMD Kria, Zynq UltraScale+, and Versal platforms — bringing the OpenGL ES, OpenCL, and Vulkan SDKs together in a single tree.**
+**A unified development toolkit for AMD Kria K26 SOM, AMD Zynq UltraScale+ MPSoC, and AMD Versal AI Edge Series Gen 2 platforms — bringing the OpenGL ES, OpenCL, and Vulkan SDKs together in a single tree.**
 
 [![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](docs/html/index.html)
 [![Platform](https://img.shields.io/badge/platform-AMD-red.svg)](https://www.amd.com)
@@ -15,7 +15,8 @@
 The AMD GPU Unified SDK consolidates the three previously separate GPU SDKs —
 **OpenGL ES**, **OpenCL**, and **Vulkan** — into one CMake project with shared
 support libraries and a common build system. It targets AMD embedded platforms
-including **Kria, Zynq UltraScale+, and Versal** systems, and
+including the **AMD Kria K26 SOM, AMD Zynq UltraScale+ MPSoC, and AMD Versal AI
+Edge Series Gen 2** systems, and
 ships out-of-the-box samples that customers can use as a starting point for new
 applications and to explore implementation possibilities.
 
@@ -34,9 +35,9 @@ applications and to explore implementation possibilities.
 
 | Platform | Architecture | GPU | APIs | Status |
 |----------|-------------|-----|------|--------|
-| AMD Kria SOM | ARM64 | Mali 400 | OpenGL ES | ✅ Full Support (X11, FBDEV, Wayland)|
-| Zynq UltraScale+ | ARM64 | Mali 400 | OpenGL ES | ✅ Full Support (X11, FBDEV, Wayland)|
-| Versal AI Edge Series Gen 2 | ARM64 | Mali G78AE | OpenGL ES / OpenCL / Vulkan | ✅ Full Support (FBDEV, Wayland)|
+| AMD Kria K26 SOM | ARM64 | Mali 400 | OpenGL ES | ✅ Full Support (X11, FBDEV, Wayland)|
+| AMD Zynq UltraScale+ MPSoC | ARM64 | Mali 400 | OpenGL ES | ✅ Full Support (X11, FBDEV, Wayland)|
+| AMD Versal AI Edge Series Gen 2 | ARM64 | Mali G78AE | OpenGL ES / OpenCL / Vulkan | ✅ Full Support (FBDEV, Wayland)|
 
 ---
 
@@ -206,11 +207,11 @@ capabilities:
 | `zynqmp` | Mali 400 | OpenGL ES 2.0 only |
 
 ```bash
-# Build everything (Versal AI Edge Series Gen 2 / Mali G78AE) examples
+# Build everything (AMD Versal AI Edge Series Gen 2 / Mali G78AE) examples
 export AMD_SDK=/path/to/yocto_sdk/
 cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_TOOLCHAIN_FILE=sdk.cmake -D SDK_Platform=<fbdev/wayland> -D SDK_PLATFORM_TARGET=versal-2ve-2vm -B build -D ...
 
-# Build only the (ZynqMP / Mali 400) examples -> OpenGL ES 2.0 only
+# Build only the (AMD Zynq UltraScale+ MPSoC / Mali 400) examples -> OpenGL ES 2.0 only
 export AMD_SDK=/path/to/yocto_sdk/
 cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_TOOLCHAIN_FILE=sdk.cmake -D SDK_Platform=<x11,fbdev,wayland> -D SDK_PLATFORM_TARGET=zynqmp -B build -D ...
 ```
@@ -258,8 +259,9 @@ cmake -G Ninja ... \
 ```
 
 Only the support libraries for the enabled sample sets are built, so a subset
-build does not require the toolchain packages of the disabled APIs (e.g. a
-ZynqMP / OpenGL-ES-only build needs neither the Vulkan nor OpenCL SDK packages).
+build does not require the toolchain packages of the disabled APIs (e.g. an
+AMD Zynq UltraScale+ MPSoC / OpenGL-ES-only build needs neither the Vulkan nor
+OpenCL SDK packages).
 
 > **Note:** Because these are cached CMake options, switching
 > `SDK_PLATFORM_TARGET` after a first configure does not retroactively change the
@@ -356,18 +358,18 @@ the compositor-socket discovery).
 > current shell) -- do **not** run it with `./` (a child process cannot change
 > your shell's environment).
 
-> **ZynqMP only -- select the Mali driver variant.** On ZynqMP the Mali
-> user-space driver ships per-backend variants
-> (`/usr/lib/<backend>/libMali.so.9.0`); the active one **must** match the
-> windowing backend the samples were built for, otherwise EGL fails with
-> `No EGL Display available`. Select it once (as **root**) before running:
+> **AMD Zynq UltraScale+ MPSoC only -- select the Mali driver variant.** On the
+> AMD Zynq UltraScale+ MPSoC the Mali user-space driver ships per-backend
+> variants (`/usr/lib/<backend>/libMali.so.9.0`); the active one **must** match
+> the windowing backend the samples were built for, otherwise EGL fails with
+> `No EGL Display available`. Select it once before running:
 >
 > ```bash
 > # <backend> = wayland | x11 | fbdev
 > update-alternatives --install /usr/lib/libMali.so.9.0 libmali /usr/lib/<backend>/libMali.so.9.0 30
 > ```
 >
-> This is **not** needed on Versal 2VE/2VM.
+> This is **not** needed on the AMD Versal AI Edge Series Gen 2.
 
 Because every sample loads its shaders/assets with paths relative to the working
 directory, run each one **from inside its own directory**.
