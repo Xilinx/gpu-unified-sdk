@@ -1,0 +1,398 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
+ */
+/******************************************************************************/
+/**
+ *
+ * @file FBOSample.cpp
+ *
+ * This file implements test application for OpenGL rendering using SDK
+ *
+ * @note        None.
+ *
+ * <pre>
+ * MODIFICATION HISTORY:
+ *
+ * Ver   Who            Date            Changes
+ * ----- ----           --------        -----------------------------------------------
+ * 1.0   Alok G         10/06/17        Initial release.
+ * </pre>
+ *
+ *******************************************************************************/
+/******************************* Source Files ********************************/
+
+#include "FBOSample.h"
+#include "FontEngine.h"
+#include "XEGLIntf.h"
+#include "XGLSLCompile.h"
+#include "XMatrixAPI.h"
+#include "XPodium.h"
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+using namespace std;
+using std::string;
+using namespace SDKAMD;
+
+FontEngine *text;
+
+
+#ifndef WINDOW_W
+#define WINDOW_W 1920
+#endif
+
+#ifndef WINDOW_H
+#define WINDOW_H 1080
+#endif
+
+std::string fontResourceDirectory = "FontShaders/";
+string resourceDirectory = "Supportingfiles/";
+string vertexShaderFilename = "FrameBufferObject_cube.vert";
+string fragmentShaderFilename = "FrameBufferObject_cube.frag";
+
+#define FBO_WIDTH 256
+#define FBO_HEIGHT 256
+
+GLuint vertexShaderID = 0;
+GLuint fragmentShaderID = 0;
+GLuint programID = 0;
+GLint iLocPosition = -1;
+GLint iLocTextureMix = -1;
+GLint iLocTexture = -1;
+GLint iLocFillColor = -1;
+GLint iLocTexCoord = -1;
+GLint iLocProjection = -1;
+GLint iLocModelview = -1;
+
+static float angleX = 0;
+static float angleY = 0;
+static float angleZ = 0;
+XMatrixAPI rotationX;
+XMatrixAPI rotationY;
+XMatrixAPI rotationZ;
+XMatrixAPI translation;
+XMatrixAPI modelView;
+XMatrixAPI projection;
+XMatrixAPI projectionFBO;
+
+GLuint iFBO = 0;
+
+GLuint iFBOTex = 0;
+
+int windowWidth = -1;
+int windowHeight = -1;
+
+/**
+ * @brief Initializes graphics resources for framebuffer object demonstration
+ * 
+ * @param width Window width in pixels
+ * @param height Window height in pixels
+ * @return true if initialization successful, false otherwise
+ * 
+ * This function sets up a complete render-to-texture pipeline using Frame Buffer Objects (FBO):
+ * - Creates an off-screen framebuffer with attached color texture
+ * - Sets up two different projection matrices (main window and FBO)
+ * - Configures texture parameters for the render target
+ * - Validates framebuffer completeness for proper FBO operation
+ * 
+ * The FBO technique allows rendering to a texture that can later be used in subsequent
+ * rendering passes, enabling advanced effects like post-processing, reflections, or
+ * multi-pass rendering algorithms.
+ */
+bool prepareGraphics(int width, int height) {
+    windowWidth = width;
+    windowHeight = height;
+
+    string vertexShaderPath = resourceDirectory + vertexShaderFilename;
+    string fragmentShaderPath = resourceDirectory + fragmentShaderFilename;
+
+    projection = XMatrixAPI::XMatrixAPIPerspective(45.0f, windowWidth / (float)windowHeight, 0.01f, 100.0f);
+    projectionFBO = XMatrixAPI::XMatrixAPIPerspective(45.0f, (FBO_WIDTH / (float)FBO_HEIGHT), 0.01f, 100.0f);
+    translation = XMatrixAPI::createTranslation(0.0f, 0.0f, -2.0f);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    text = new FontEngine(fontResourceDirectory.c_str(), width, height);
+    text->addString(0, 0, "RenderBlitzSDK: Frame Buffer Object Sample", 255, 0, 0, 255);
+
+    glGenTextures(1, &iFBOTex);
+    glBindTexture(GL_TEXTURE_2D, iFBOTex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, FBO_WIDTH, FBO_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glGenFramebuffers(1, &iFBO);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, iFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, iFBOTex, 0);
+    GLenum iResult = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (iResult != GL_FRAMEBUFFER_COMPLETE) {
+        printf("Framebuffer incomplete at %s:%i\n", __FILE__, __LINE__);
+        return false;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    Shader::processShader(&vertexShaderID, vertexShaderPath.c_str(), GL_VERTEX_SHADER);
+    Shader::processShader(&fragmentShaderID, fragmentShaderPath.c_str(), GL_FRAGMENT_SHADER);
+
+    programID = glCreateProgram();
+    glAttachShader(programID, vertexShaderID);
+    glAttachShader(programID, fragmentShaderID);
+    glLinkProgram(programID);
+    glUseProgram(programID);
+
+    iLocPosition = glGetAttribLocation(programID, "a_v4Position");
+    if (iLocPosition == -1) {
+        printf("Attribute not found at %s:%i\n", __FILE__, __LINE__);
+        return false;
+    }
+    glEnableVertexAttribArray(iLocPosition);
+
+    iLocTextureMix = glGetUniformLocation(programID, "u_fTex");
+    if (iLocTextureMix == -1) {
+        printf("Warning: Uniform not found at %s:%i\n", __FILE__, __LINE__);
+    } else {
+        glUniform1f(iLocTextureMix, 0.0);
+    }
+
+    iLocTexture = glGetUniformLocation(programID, "u_s2dTexture");
+    if (iLocTexture == -1) {
+        printf("Warning: Uniform not found at %s:%i\n", __FILE__, __LINE__);
+    } else {
+        glUniform1i(iLocTexture, 0);
+    }
+
+    iLocFillColor = glGetAttribLocation(programID, "a_v4FillColor");
+    if (iLocFillColor == -1) {
+        printf("Warning: Attribute not found at %s:%i\n", __FILE__, __LINE__);
+    } else {
+        glEnableVertexAttribArray(iLocFillColor);
+    }
+
+    iLocTexCoord = glGetAttribLocation(programID, "a_v2TexCoord");
+    if (iLocTexCoord == -1) {
+        printf("Warning: Attribute not found at %s:%i\n", __FILE__, __LINE__);
+    } else {
+        glEnableVertexAttribArray(iLocTexCoord);
+    }
+
+    iLocProjection = glGetUniformLocation(programID, "u_m4Projection");
+    if (iLocProjection == -1) {
+        printf("Warning: Uniform not found at %s:%i\n", __FILE__, __LINE__);
+    } else {
+        glUniformMatrix4fv(iLocProjection, 1, GL_FALSE, projection.getAsArray());
+    }
+
+    iLocModelview = glGetUniformLocation(programID, "u_m4Modelview");
+    if (iLocModelview == -1) {
+        printf("Warning: Uniform not found at %s:%i\n", __FILE__, __LINE__);
+    }
+
+    return true;
+}
+/*
+void GraphicsUpdate(void) {
+    glUseProgram(programID);
+    glEnableVertexAttribArray(iLocPosition);
+    glVertexAttribPointer(iLocPosition, 3, GL_FLOAT, GL_FALSE, 0, cubeVertices);
+
+    if (iLocFillColor != -1) {
+        glEnableVertexAttribArray(iLocFillColor);
+        glVertexAttribPointer(iLocFillColor, 4, GL_FLOAT, GL_FALSE, 0, cubeColors);
+    }
+
+    if (iLocTexCoord != -1) {
+        glEnableVertexAttribArray(iLocTexCoord);
+        glVertexAttribPointer(iLocTexCoord, 2, GL_FLOAT, GL_FALSE, 0, cubeTextureCoordinates);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, iFBO);
+    glViewport(0, 0, FBO_WIDTH, FBO_HEIGHT);
+
+    glClearColor(0.8f, 0.8f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    rotationX = XMatrixAPI::createRotationX(-angleZ);
+    rotationY = XMatrixAPI::createRotationY(-angleY);
+    rotationZ = XMatrixAPI::createRotationZ(-angleX);
+
+    modelView = translation * rotationX;
+    modelView = modelView * rotationY;
+    modelView = modelView * rotationZ;
+
+    glUniformMatrix4fv(iLocModelview, 1, GL_FALSE, modelView.getAsArray());
+    glUniformMatrix4fv(iLocProjection, 1, GL_FALSE, projectionFBO.getAsArray());
+
+    if (iLocTextureMix != -1) {
+        glUniform1f(iLocTextureMix, 0.0);
+    }
+
+    glDrawElements(GL_TRIANGLE_STRIP, sizeof(cubeIndices) / sizeof(GLubyte), GL_UNSIGNED_BYTE, cubeIndices);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glViewport(0, 0, windowWidth, windowHeight);
+
+    glClearColor(0.0f, 0.0f, 0.2f, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    rotationX = XMatrixAPI::createRotationX(angleX);
+    rotationY = XMatrixAPI::createRotationY(angleY);
+    rotationZ = XMatrixAPI::createRotationZ(angleZ);
+
+    modelView = translation * rotationX;
+    modelView = modelView * rotationY;
+    modelView = modelView * rotationZ;
+
+    glUniformMatrix4fv(iLocModelview, 1, GL_FALSE, modelView.getAsArray());
+    glUniformMatrix4fv(iLocProjection, 1, GL_FALSE, projection.getAsArray());
+
+    if (iLocTextureMix != -1) {
+        glUniform1f(iLocTextureMix, 1.0);
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, iFBOTex);
+
+    glDrawElements(GL_TRIANGLE_STRIP, sizeof(cubeIndices) / sizeof(GLubyte), GL_UNSIGNED_BYTE, cubeIndices);
+
+    angleX += 0.2;
+    angleY += 0.2;
+    angleZ += 0;
+
+    if (angleX >= 360)
+        angleX -= 360;
+    if (angleY >= 360)
+        angleY -= 360;
+    if (angleZ >= 360)
+        angleZ -= 360;
+    text->draw();
+}
+*/
+
+/**
+ * @brief Graphics rendering function demonstrating Frame Buffer Object usage
+ * 
+ * This function implements a two-pass rendering technique using FBO:
+ * 
+ * Pass 1 (Render to FBO):
+ * - Binds the framebuffer object as render target
+ * - Renders a rotating cube to the off-screen texture
+ * - Uses FBO-specific projection matrix and viewport
+ * 
+ * Pass 2 (Render to screen):
+ * - Binds the default framebuffer (screen)
+ * - Renders the cube again, but textured with the FBO result
+ * - Creates a recursive/feedback effect showing the cube textured with itself
+ * 
+ * The result demonstrates how FBO enables complex rendering effects by using
+ * the output of one rendering pass as input to subsequent passes.
+ */
+void GraphicsUpdate(void) {
+    glUseProgram(programID);
+    glEnableVertexAttribArray(iLocPosition);
+    glVertexAttribPointer(iLocPosition, 3, GL_FLOAT, GL_FALSE, 0, cubeVertices);
+
+    if (iLocFillColor != -1) {
+        glEnableVertexAttribArray(iLocFillColor);
+        glVertexAttribPointer(iLocFillColor, 4, GL_FLOAT, GL_FALSE, 0, cubeColors);
+    }
+
+    if (iLocTexCoord != -1) {
+        glEnableVertexAttribArray(iLocTexCoord);
+        glVertexAttribPointer(iLocTexCoord, 2, GL_FLOAT, GL_FALSE, 0, cubeTextureCoordinates);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, iFBO);
+    glViewport(0, 0, FBO_WIDTH, FBO_HEIGHT);
+
+    glClearColor(0.8f, 0.8f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    rotationX = XMatrixAPI::createRotationX(-angleZ);
+    rotationY = XMatrixAPI::createRotationY(-angleY);
+    rotationZ = XMatrixAPI::createRotationZ(-angleX);
+
+    modelView = translation * rotationX;
+    modelView = modelView * rotationY;
+    modelView = modelView * rotationZ;
+
+    glUniformMatrix4fv(iLocModelview, 1, GL_FALSE, modelView.getAsArray());
+    glUniformMatrix4fv(iLocProjection, 1, GL_FALSE, projectionFBO.getAsArray());
+
+    if (iLocTextureMix != -1) {
+        glUniform1f(iLocTextureMix, 0.0);
+    }
+
+    glDrawElements(GL_TRIANGLE_STRIP, sizeof(cubeIndices) / sizeof(GLubyte), GL_UNSIGNED_BYTE, cubeIndices);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glViewport(0, 0, windowWidth, windowHeight);
+
+    glClearColor(0.0f, 0.0f, 0.2f, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    rotationX = XMatrixAPI::createRotationX(angleX);
+    rotationY = XMatrixAPI::createRotationY(angleY);
+    rotationZ = XMatrixAPI::createRotationZ(angleZ);
+
+    modelView = translation * rotationX;
+    modelView = modelView * rotationY;
+    modelView = modelView * rotationZ;
+
+    glUniformMatrix4fv(iLocModelview, 1, GL_FALSE, modelView.getAsArray());
+    glUniformMatrix4fv(iLocProjection, 1, GL_FALSE, projection.getAsArray());
+
+    if (iLocTextureMix != -1) {
+        glUniform1f(iLocTextureMix, 1.0);
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, iFBOTex);
+
+    glDrawElements(GL_TRIANGLE_STRIP, sizeof(cubeIndices) / sizeof(GLubyte), GL_UNSIGNED_BYTE, cubeIndices);
+
+    angleX += 0.2;
+    angleY += 0.2;
+    angleZ += 0;
+
+    if (angleX >= 360)
+        angleX -= 360;
+    if (angleY >= 360)
+        angleY -= 360;
+    if (angleZ >= 360)
+        angleZ -= 360;
+    text->draw();
+}
+
+int main(void) {
+    XPodium *podium = XPodium::getHandler();
+    podium->prepareWindow(WINDOW_W, WINDOW_H);
+    CoreEGL::initializeEGL(CoreEGL::OPENGLES2);
+    eglMakeCurrent(CoreEGL::display, CoreEGL::surface, CoreEGL::surface, CoreEGL::context);
+    prepareGraphics(WINDOW_W, WINDOW_H);
+
+    bool end = false;
+    while (!end) {
+        if (podium->checkWindow() != XPodium::WINDOW_IDLE) {
+            end = true;
+        }
+        GraphicsUpdate();
+        eglSwapBuffers(CoreEGL::display, CoreEGL::surface);
+    }
+    delete text;
+    CoreEGL::terminateEGL();
+    podium->destroyWindow();
+
+    return 0;
+}

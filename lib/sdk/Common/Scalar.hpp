@@ -1,0 +1,28 @@
+/*
+* SPDX-License-Identifier: BSD-3-Clause
+* Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
+*/
+
+
+#pragma once
+
+#include <type_traits>
+
+
+
+
+template <typename T>
+class Scalar {
+public:
+	template <typename K>
+	Scalar(const K & value) noexcept :
+		value_(value)
+	{
+		static_assert(std::is_same_v<T, K>);
+	}
+
+	operator T() const noexcept { return value_; }
+
+private:
+	T value_;
+};

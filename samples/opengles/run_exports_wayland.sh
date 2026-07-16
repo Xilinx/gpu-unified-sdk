@@ -1,0 +1,27 @@
+#! /bin/bash
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
+
+#
+# Runtime environment for the OpenGL ES samples on the target using the
+# Wayland windowing backend.
+#
+# Source this on the target (or in your run environment) before launching a
+# sample that was built with -D SDK_Platform=wayland:
+#
+#     source run_exports_wayland.sh
+#     ./trianglesample
+
+export DISPLAY=:0.0
+
+# A Wayland client finds the compositor socket at
+# "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY". Prefer the per-user runtime dir; if it has
+# no wayland socket, fall back to a shared one at /run/wayland-0.
+if [ -z "${XDG_RUNTIME_DIR}" ]; then
+    export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+fi
+if [ ! -S "${XDG_RUNTIME_DIR}/wayland-0" ] && [ -S /run/wayland-0 ]; then
+    export XDG_RUNTIME_DIR=/run
+fi
+
+export WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}

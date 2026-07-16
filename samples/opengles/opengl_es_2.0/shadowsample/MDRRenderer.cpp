@@ -1,0 +1,80 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
+ */
+/** 
+ * 
+ * MODIFICATION HISTORY:
+ *
+ * Ver   Who            Date            Changes
+ * ----- ----           --------        ---------------------------------------
+ * 1.0   Alok G         10/06/17        Initial release.
+ * 2.0   Aidan R		8/20/24			Cmake + Doxygen.
+ * 
+ *
+ *
+ * @file MDRRenderer.cpp
+ *
+ * @brief This class represents an abstract object, which could be used as a render target (e.g. FBO).
+ *
+*******************************************************************************/
+
+#include "MDRRenderer.h"
+
+using namespace SDKAMD;
+
+MDRRenderer::MDRRenderer()
+    :
+    theWidth(0xFFFFFFFF),
+    theHeight(0xFFFFFFFF),
+    //
+    theMatrixP(),
+    //
+    theFrameCounter(0)
+  {
+  }
+
+MDRRenderer::~MDRRenderer()
+  {
+  }
+
+bool MDRRenderer::initialize(
+    unsigned int aWidth,
+    unsigned int aHeight)
+  {
+  theWidth = aWidth;
+  theHeight = aHeight;
+
+  // Calculate projective matrix
+  theMatrixP.setPerspective(45.0f, (float)theWidth/(float)theHeight, 0.1f, 100.0f);
+
+  /* Initialize OpenGL-ES. */
+  GL_CHECK(glClearColor(0.2f, 0.2f, 0.2f, 0.0f));
+  GL_CHECK(glClearDepthf(0.0f));
+  GL_CHECK(glEnable(GL_BLEND));
+  GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+  GL_CHECK(glDisable(GL_CULL_FACE));
+  GL_CHECK(glEnable(GL_DEPTH_TEST));
+  GL_CHECK(glDepthMask(false));
+  GL_CHECK(glDepthFunc(GL_GREATER));
+
+  return true;
+  }
+
+void MDRRenderer::preFrameRender()
+  {
+  GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+  }
+
+void MDRRenderer::postFrameRender()
+  {
+  theFrameCounter++;
+  }
+
+void MDRRenderer::activateTexture(
+    MDRTexUnit aUnit,
+    const MDRRendererTexture& aTexture)
+  {
+  GL_CHECK(glActiveTexture(GL_TEXTURE0 + aUnit));
+  GL_CHECK(glBindTexture(GL_TEXTURE_2D, aTexture.getName()));
+  }

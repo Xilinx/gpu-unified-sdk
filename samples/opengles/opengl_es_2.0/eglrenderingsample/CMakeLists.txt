@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
+
+
+# eglrenderingsample - EGLImage rendering (OpenGL ES 2.0).#
+# This sample is an X11/fbdev EGL demo: it creates its own EGL surface directly
+# (X11 Display/Window, fbdev mmap) instead of using the SdkGlesFramework Wayland
+# podium. It is therefore built standalone against X11 + EGL + GLESv2 and does
+# NOT link SdkGlesFramework. It also declares its own local WINDOW_W/WINDOW_H, so
+# the shared window-size defines are intentionally not passed here.
+
+find_package(X11 QUIET)
+if(NOT X11_FOUND)
+	message(STATUS "eglrenderingsample: X11 not found, skipping target")
+	return()
+endif()
+
+file(GLOB EGLRENDERINGSAMPLE_SOURCES
+	"*.c"
+)
+
+add_executable(eglrenderingsample ${EGLRENDERINGSAMPLE_SOURCES})
+
+target_link_libraries(eglrenderingsample PRIVATE
+	EGL
+	GLESv2
+	${X11_LIBRARIES}
+	Xext
+	pthread
+	dl
+	m
+)
+
+target_include_directories(eglrenderingsample PRIVATE
+	${X11_INCLUDE_DIR}
+)
+
+get_filename_component(_sample_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+get_filename_component(_gles_version "${CMAKE_CURRENT_SOURCE_DIR}" DIRECTORY)
+get_filename_component(_gles_version "${_gles_version}" NAME)
+string(TOLOWER "${SDK_Platform}" _backend_name)
+set(_outdir "${SDK_OUTPUT_DIR}/opengles/${_backend_name}/${_gles_version}/${_sample_name}")
+set_target_properties(eglrenderingsample PROPERTIES
+	RUNTIME_OUTPUT_DIRECTORY "${_outdir}"
+	INSTALL_RPATH_USE_LINK_PATH FALSE
+	BUILD_WITH_INSTALL_RPATH TRUE
+)
+
+install(TARGETS eglrenderingsample
+	RUNTIME DESTINATION bin/eglrenderingsample)

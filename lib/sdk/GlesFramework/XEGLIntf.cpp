@@ -1,0 +1,357 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (C) 2026 Advanced Micro Devices, Inc. All rights reserved.
+ */
+/**
+ * MODIFICATION HISTORY:
+ *
+ * Ver   Who            Date            Changes
+ * ----- ----           --------        ---------------------------------------
+ * 1.0   Alok G         10/06/17        Initial release.
+ * 2.0   Aidan R		8/20/24			Cmake + Doxygen.
+ * 3.0   Nirmal S       7/7/25          Wayland Support
+ * 
+ *
+*******************************************************************************/
+/**
+ *
+ * @file XEGLIntf.cpp
+ *
+ * @brief This file implements all the functions related to EGL bindings.
+ *
+*******************************************************************************/
+
+
+#include "XEGLIntf.h"
+#include "XPodium.h"
+
+#include <cstdlib>
+
+/*
+ * EGL_CONTEXT_MINOR_VERSION is a core token since EGL 1.5. Some drivers (e.g. the
+ * Mali 400 / ZynqMP EGL headers) only expose the EGL_KHR_create_context form
+ * (EGL_CONTEXT_MINOR_VERSION_KHR). Fall back to the KHR token (same value) so the
+ * framework builds against both core-1.5 and KHR-only EGL headers.
+ */
+#ifndef EGL_CONTEXT_MINOR_VERSION
+#ifdef EGL_CONTEXT_MINOR_VERSION_KHR
+#define EGL_CONTEXT_MINOR_VERSION EGL_CONTEXT_MINOR_VERSION_KHR
+#endif
+#endif
+
+    EGLDisplay CoreEGL::display;
+    EGLContext CoreEGL::context;
+    EGLSurface CoreEGL::surface;
+    EGLConfig CoreEGL::config;
+
+    EGLint CoreEGL::configAttributes[] =
+    {
+        EGL_SAMPLES,             4,
+        EGL_ALPHA_SIZE,          0,
+#ifdef ENABLE_FBDEV
+        EGL_RED_SIZE,            8,
+        EGL_GREEN_SIZE,          8,
+        EGL_BLUE_SIZE,           8,
+        EGL_BUFFER_SIZE,         32,
+#else
+        EGL_RED_SIZE,            8,
+        EGL_GREEN_SIZE,          8,
+        EGL_BLUE_SIZE,           8,
+        EGL_BUFFER_SIZE,         32,
+#endif
+        EGL_STENCIL_SIZE,        0,
+        EGL_RENDERABLE_TYPE,     0,    /* This field will be completed according to application request. */
+        EGL_SURFACE_TYPE,        EGL_WINDOW_BIT ,
+        EGL_DEPTH_SIZE,          16,
+        EGL_NONE
+    };
+
+    EGLint CoreEGL::contextAttributes[] =
+    {
+        EGL_CONTEXT_CLIENT_VERSION, 0, 
+        EGL_NONE, EGL_NONE,            
+        EGL_NONE
+    };
+
+    EGLint CoreEGL::windowAttributes[] =
+    {
+        EGL_NONE
+    };
+
+  
+
+    void CoreEGL::initializeEGL(OpenGLESVersion requestedAPIVersion)
+    {
+        XPodium* platform = XPodium::getHandler();
+
+        EGLBoolean success = EGL_FALSE;
+
+#ifdef ENABLE_FBDEV
+        display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+#elif defined(ENABLE_WAYLAND)
+        {
+            EGLNativeDisplayType nativeDisplay =
+                (EGLNativeDisplayType)((XWaylandPodium*)platform)->getWaylandDisplay();
+
+            // The Mali EGL stack does not return a usable display from the
+            // legacy eglGetDisplay(wl_display); the Wayland platform must be
+            // selected explicitly via EGL_EXT_platform_wayland. Resolve the
+            // entry point at runtime so this works regardless of EGL header
+            // version, and fall back to eglGetDisplay() if unavailable.
+#ifndef EGL_PLATFORM_WAYLAND_EXT
+#define EGL_PLATFORM_WAYLAND_EXT 0x31D8
+#endif
+            PFNEGLGETPLATFORMDISPLAYEXTPROC getPlatformDisplay =
+                (PFNEGLGETPLATFORMDISPLAYEXTPROC)
+                    eglGetProcAddress("eglGetPlatformDisplayEXT");
+            if (!getPlatformDisplay)
+            {
+                getPlatformDisplay = (PFNEGLGETPLATFORMDISPLAYEXTPROC)
+                    eglGetProcAddress("eglGetPlatformDisplay");
+            }
+
+            if (getPlatformDisplay)
+            {
+                display = getPlatformDisplay(EGL_PLATFORM_WAYLAND_EXT,
+                    nativeDisplay, NULL);
+            }
+            else
+            {
+                display = eglGetDisplay(nativeDisplay);
+            }
+        }
+#else
+        platform->display = XOpenDisplay(NULL);
+        display = eglGetDisplay(platform->display);
+#endif
+
+        if(display == EGL_NO_DISPLAY)
+        {
+            EGLint error = eglGetError();
+            printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+            printf("No EGL Display available at %s:%i\n", __FILE__, __LINE__);
+            exit(1);
+        }
+
+        success = eglInitialize(display, NULL, NULL);
+        if(success != EGL_TRUE)
+        {
+            EGLint error = eglGetError();
+            printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+            printf("Failed to initialize EGL at %s:%i\n", __FILE__, __LINE__);
+            exit(1);
+        }
+
+	if(requestedAPIVersion == OPENGLES1)
+        {
+            configAttributes[15] = EGL_OPENGL_ES_BIT;
+            contextAttributes[1] = 1;
+            contextAttributes[2] = EGL_NONE;
+        }
+        else if(requestedAPIVersion == OPENGLES2)
+        {
+            configAttributes[15] = EGL_OPENGL_ES2_BIT;
+            contextAttributes[1] = 2;
+            contextAttributes[2] = EGL_NONE;
+        }
+        else if (requestedAPIVersion == OPENGLES3)
+        {
+            configAttributes[15] = EGL_OPENGL_ES3_BIT_KHR;
+            contextAttributes[1] = 3;
+            contextAttributes[2] = EGL_NONE;
+        }
+        else if (requestedAPIVersion == OPENGLES31)
+        {
+            configAttributes[15] = EGL_OPENGL_ES3_BIT_KHR;
+            contextAttributes[1] = 3;
+            contextAttributes[2] = EGL_CONTEXT_MINOR_VERSION;
+            contextAttributes[3] = 1;
+        }
+
+
+
+
+
+#ifdef ENABLE_FBDEV
+        config = findConfig(true);
+#else
+        config = findConfig(false);
+#endif
+
+#ifdef ENABLE_X11
+        ((XLinuxPodium*)(platform))->createX11Window();
+#endif
+
+        #ifdef ENABLE_FBDEV
+            surface = eglCreateWindowSurface(display, config, (EGLNativeWindowType)(platform->Fwindow), windowAttributes); // NS: platform->window was working before
+        #elif defined(ENABLE_WAYLAND)
+            surface = eglCreateWindowSurface(display, config, (EGLNativeWindowType)((XWaylandPodium*)platform)->getEGLWindow(), windowAttributes);
+        #else
+            surface = eglCreateWindowSurface(display, config, (EGLNativeWindowType)(platform->window), windowAttributes);
+        #endif
+
+
+        if(surface == EGL_NO_SURFACE)
+        {
+            EGLint error = eglGetError();
+            printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+            printf("Failed to create EGL surface at %s:%i\n", __FILE__, __LINE__);
+            exit(1);
+        }
+
+        eglBindAPI(EGL_OPENGL_ES_API);
+
+        context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttributes);
+        if(context == EGL_NO_CONTEXT)
+        {
+            EGLint error = eglGetError();
+            printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+            printf("Failed to create EGL context at %s:%i\n", __FILE__, __LINE__);
+            exit(1);
+        }
+    }
+
+    void CoreEGL::setEGLSamples(EGLint requiredEGLSamples)
+    {
+        configAttributes[1] = requiredEGLSamples;
+    }
+
+    void CoreEGL::terminateEGL(void)
+    {
+        eglBindAPI(EGL_OPENGL_ES_API);
+        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context);
+        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        eglDestroyContext(display, context);
+        eglDestroySurface(display, surface);
+        eglTerminate(display);
+    }
+
+  EGLConfig CoreEGL::findConfig(bool strictMatch)
+    {
+        EGLConfig *configsArray = NULL;
+        EGLint numberOfConfigs = 0;
+        EGLBoolean success = EGL_FALSE;
+
+        /* Enumerate available EGL configurations which match or exceed our required attribute list. */
+        success = eglChooseConfig(display, configAttributes, NULL, 0, &numberOfConfigs);
+        if(success != EGL_TRUE)
+        {
+            EGLint error = eglGetError();
+            printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+            printf("Failed to enumerate EGL configs at %s:%i\n", __FILE__, __LINE__);
+            exit(1);
+        }
+
+        printf("Number of configs found is %d\n", numberOfConfigs);
+
+        if (numberOfConfigs == 0)
+        {
+            printf("Disabling AntiAliasing to try and find a config.\n");
+            configAttributes[1] = EGL_DONT_CARE;
+            success = eglChooseConfig(display, configAttributes, NULL, 0, &numberOfConfigs);
+            if(success != EGL_TRUE)
+            {
+                EGLint error = eglGetError();
+                printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+                printf("Failed to enumerate EGL configs at %s:%i\n", __FILE__, __LINE__);
+                exit(1);
+            }
+
+            if (numberOfConfigs == 0)
+            {
+                printf("No configs found with the requested attributes.\n");
+                exit(1);
+            }
+            else
+            {
+                printf("Configs found when antialiasing disabled.\n ");
+            }
+        }
+
+        configsArray = (EGLConfig *)calloc(numberOfConfigs, sizeof(EGLConfig));
+        if(configsArray == NULL)
+        {
+            printf("Out of memory at %s:%i\n", __FILE__, __LINE__);
+            exit(1);
+        }
+        success = eglChooseConfig(display, configAttributes, configsArray, numberOfConfigs, &numberOfConfigs);
+        if(success != EGL_TRUE)
+        {
+            EGLint error = eglGetError();
+            printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+            printf("Failed to enumerate EGL configs at %s:%i\n", __FILE__, __LINE__);
+            exit(1);
+        }
+
+        bool matchFound = false;
+        int matchingConfig = -1;
+
+        if (strictMatch)
+        {
+            EGLint redSize = configAttributes[5];
+            EGLint greenSize = configAttributes[7];
+            EGLint blueSize = configAttributes[9];
+
+            for(int configsIndex = 0; (configsIndex < numberOfConfigs) && !matchFound; configsIndex++)
+            {
+                EGLint attributeValue = 0;
+
+                success = eglGetConfigAttrib(display, configsArray[configsIndex], EGL_RED_SIZE, &attributeValue);
+                if(success != EGL_TRUE)
+                {
+                    EGLint error = eglGetError();
+                    printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+                    printf("Failed to get EGL attribute at %s:%i\n", __FILE__, __LINE__);
+                    exit(1);
+                }
+
+                if(attributeValue == redSize)
+                {
+                    success = eglGetConfigAttrib(display, configsArray[configsIndex], EGL_GREEN_SIZE, &attributeValue);
+                    if(success != EGL_TRUE)
+                    {
+                        EGLint error = eglGetError();
+                        printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+                        printf("Failed to get EGL attribute at %s:%i\n", __FILE__, __LINE__);
+                        exit(1);
+                    }
+
+                    if(attributeValue == greenSize)
+                    {
+                        success = eglGetConfigAttrib(display, configsArray[configsIndex], EGL_BLUE_SIZE, &attributeValue);
+                        if(success != EGL_TRUE)
+                        {
+                            EGLint error = eglGetError();
+                            printf("eglGetError(): %i (0x%.4x)\n", (int)error, (int)error);
+                            printf("Failed to get EGL attribute at %s:%i\n", __FILE__, __LINE__);
+                            exit(1);
+                        }
+
+                        if(attributeValue == blueSize) 
+                        {
+                            matchFound = true;
+                            matchingConfig = configsIndex;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            matchingConfig = 0;
+            matchFound = true;
+        }
+
+        if(!matchFound)
+        {
+            printf("Failed to find matching EGL config at %s:%i\n", __FILE__, __LINE__);
+            exit(1);
+        }
+
+        EGLConfig configToReturn = configsArray[matchingConfig];
+
+        free(configsArray);
+        configsArray = NULL;
+
+        return configToReturn;
+    }
