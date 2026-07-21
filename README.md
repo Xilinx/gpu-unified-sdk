@@ -4,7 +4,7 @@
 
 **A unified development toolkit for AMD Kria K26 SOM, AMD Zynq UltraScale+ MPSoC, and AMD Versal AI Edge Series Gen 2 platforms — bringing the OpenGL ES, OpenCL, and Vulkan SDKs together in a single tree.**
 
-[![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](docs/html/index.html)
+![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)
 [![Platform](https://img.shields.io/badge/platform-AMD-red.svg)](https://www.amd.com)
 [![OpenGL ES](https://img.shields.io/badge/OpenGL%20ES-2.0%20%7C%203.0-green.svg)](https://www.khronos.org/opengles/)
 [![OpenCL](https://img.shields.io/badge/OpenCL-1.2%20%7C%202.0-green.svg)](https://www.khronos.org/opencl/)
@@ -511,6 +511,19 @@ result the same way (it accepts the same backend flags).
 
 
 ---
+
+## 📖 **Documentation**
+
+### **Generate Complete Documentation**
+
+The SDK includes a Doxygen configuration that generates API documentation for the
+OpenGL ES, OpenCL, and Vulkan libraries and samples directly from the source. To
+build the HTML docs, run the following from the SDK root (the directory containing
+the `Doxyfile`):
+
+```bash
+./build_documentation.sh
+```
 
 # 🎨 Complete Sample Reference
 
