@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <poll.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,7 +54,6 @@ void *mapped_base;
 unsigned char *p = NULL;//(unsigned char *)mapped_base;
 EGLImageKHR egl_img,egl_img2;
 
-typedef int bool;
 #define TRUE  1
 #define FALSE 0
 
@@ -198,7 +198,21 @@ void prepareEGLImageSource(EGLDisplay egl_dpy, EGLContext egl_ctx,size_t width,
 		EGL_NONE 
 	};
 
-	EGLImageKHR image = eglCreateImageKHR(egl_dpy, egl_ctx, EGL_GL_TEXTURE_2D_KHR,(EGLClientBuffer)(uintptr_t)wsource, imageAttributes);
+	// eglCreateImageKHR is an EGL extension entry point that libEGL is not required
+	// to export (mesa exports only the core EGL functions), so resolve it at runtime
+	// via eglGetProcAddress.
+	static PFNEGLCREATEIMAGEKHRPROC peglCreateImageKHR = NULL;
+	if (!peglCreateImageKHR) {
+		peglCreateImageKHR =
+			(PFNEGLCREATEIMAGEKHRPROC)eglGetProcAddress("eglCreateImageKHR");
+	}
+
+	EGLImageKHR image = EGL_NO_IMAGE_KHR;
+	if (peglCreateImageKHR) {
+		image = peglCreateImageKHR(egl_dpy, egl_ctx, EGL_GL_TEXTURE_2D_KHR,(EGLClientBuffer)(uintptr_t)wsource, imageAttributes);
+	} else {
+		printf("eglCreateImageKHR is not available (EGL_KHR_image is required)\n");
+	}
 
 	*outSourceTexture = wsource;
 	*outSourceImage   = image;

@@ -363,10 +363,13 @@ public:
 inline Log::Context Log::context(const Level level, const std::string_view file, const int line,
 		const std::string_view func, Stacktrace && stacktrace) noexcept
 {
+	// The prefixes are project relative, and __FILE__ is not: it is absolute in most
+	// builds, and a build system may rewrite its leading part (-ffile-prefix-map), so
+	// match the prefix anywhere in the path rather than only at its start.
 	std::string_view::size_type prefixSize = 0;
 	for (const std::string_view & prefix : kDirPrefixes) {
-		if (file.starts_with(prefix)) {
-			prefixSize = prefix.size();
+		if (const auto pos = file.rfind(prefix); pos != std::string_view::npos) {
+			prefixSize = pos + prefix.size();
 			break;
 		}
 	}
