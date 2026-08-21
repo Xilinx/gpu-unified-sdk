@@ -14,8 +14,19 @@
 
 # Window size, passed to samples as WINDOW_W / WINDOW_H compile definitions
 # (default 1920x1080).
-set(GLES_WINDOW_W "1920" CACHE STRING "OpenGL ES sample window width")
-set(GLES_WINDOW_H "1080" CACHE STRING "OpenGL ES sample window height")
+set(GLES_WINDOW_W_DEFAULT "1920")
+set(GLES_WINDOW_H_DEFAULT "1080")
+set(GLES_WINDOW_W "${GLES_WINDOW_W_DEFAULT}" CACHE STRING "OpenGL ES sample window width")
+set(GLES_WINDOW_H "${GLES_WINDOW_H_DEFAULT}" CACHE STRING "OpenGL ES sample window height")
+
+# eglrenderingsample renders to the whole framebuffer and only takes a size when one
+# was actually asked for, so record whether these differ from the defaults. Setting
+# them to the default values explicitly is indistinguishable from not setting them,
+# which only matters to that one sample.
+if (NOT GLES_WINDOW_W STREQUAL GLES_WINDOW_W_DEFAULT OR
+    NOT GLES_WINDOW_H STREQUAL GLES_WINDOW_H_DEFAULT)
+	set(GLES_WINDOW_SIZE_EXPLICIT TRUE)
+endif()
 
 # Shared FontShaders folder (font.vert / font.frag / font.raw) used by the font
 # engine and several samples. Samples stage this next to their binary.

@@ -450,11 +450,12 @@ directory, run each one **from inside its own directory**.
 
 > **`eglrenderingsample` is different:** it is a standalone **FBDEV-only** demo
 > that manages its own EGL surface via `/dev/fb0` and does **not** use the
-> framework's windowing. It ignores the Wayland/X11 backends -- run it from a
-> bare console with a working framebuffer, regardless of the `SDK_Platform` the
-> rest of the build used. (Even though it is staged under the `<backend>` folder
-> named after your `SDK_Platform`, that folder name is only a label; the binary
-> is always the fbdev demo.)
+> framework's windowing. It is therefore built only with `-D SDK_Platform=fbdev`
+> and is skipped for the Wayland and X11 backends, where it would build but never
+> run. Run it from a bare console with a working framebuffer. Its surface always
+> covers the framebuffer, so it renders at the panel's own resolution unless you
+> configure `GLES_WINDOW_W` / `GLES_WINDOW_H`, in which case it renders into a
+> rectangle of that size.
 
 
 # Running the Vulkan samples

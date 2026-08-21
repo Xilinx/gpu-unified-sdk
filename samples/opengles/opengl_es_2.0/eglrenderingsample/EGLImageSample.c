@@ -479,6 +479,17 @@ static void make_fbdev_window(Display *x_dpy, EGLDisplay egl_dpy,
 
 	if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx))
 		printf("failed to make context/surface current");
+
+	/* The surface always covers the framebuffer, so the panel resolution is the
+	 * render size unless the build asked for a specific one. Leaving the viewport
+	 * alone keeps GL's default, which is the whole surface. */
+	if (width <= 0 || height <= 0) {
+		width = (int)vinfo.xres;
+		height = (int)vinfo.yres;
+	}
+	if (width > 0 && height > 0)
+		glViewport(0, 0, width, height);
+
 	*ctxRet = egl_ctx;
 	*surfRet = egl_surf;
 
@@ -535,7 +546,13 @@ void prepareEGLImg(EGLDisplay egl_dpy, EGLContext egl_ctx){
 /*********************************************************************************************************************************************************/
 int main(int argc, char *argv[])
 {
-	const int WINDOW_W = 2160, WINDOW_H = 1080 ;
+	/* Zero means "size from the panel"; a build configured with GLES_WINDOW_W /
+	 * GLES_WINDOW_H compiles those in instead (see this sample's CMakeLists). */
+#if defined(WINDOW_W) && defined(WINDOW_H)
+	const int window_w = WINDOW_W, window_h = WINDOW_H;
+#else
+	const int window_w = 0, window_h = 0;
+#endif
 	Display *x_dpy;
 	Window win;
 	EGLSurface egl_surf;
@@ -579,7 +596,7 @@ int main(int argc, char *argv[])
 	printf("\nEGL_CLIENT_APIS = %s\n", s);
 
 
-	make_fbdev_window(x_dpy, egl_dpy,"OpenGL ES 2.0 App", 0, 0, WINDOW_W, WINDOW_H,&egl_ctx, &egl_surf);
+	make_fbdev_window(x_dpy, egl_dpy,"OpenGL ES 2.0 App", 0, 0, window_w, window_h,&egl_ctx, &egl_surf);
 
 
 	if (!eglMakeCurrent(egl_dpy, egl_surf, egl_surf, egl_ctx)) {
